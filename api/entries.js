@@ -1,41 +1,32 @@
-/* Vercel serverless function — reads registrations server-side.
-   The Supabase PAT stays server-side (process.env.SUPABASE_PAT); the
-   browser never sees it. Optional passcode gate via ADMIN_KEY. */
-const PAT = process.env.SUPABASE_PAT;
-const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || "ffizrzdifznulnzbgpjy";
+const { createClient } = require("@supabase/supabase-js");
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_KEY = process.env.ADMIN_KEY;
-
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "method not allowed" });
     return;
   }
+  // Passcode gate check
   if (ADMIN_KEY && req.headers["x-admin-key"] !== ADMIN_KEY) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }
-  if (!PAT) {
-    res.status(500).json({ error: "SUPABASE_PAT not configured" });
+  if (!supabaseUrl || !supabaseServiceKey) {
+    res.status(500).json({ error: "Server error: Supabase credentials not configured." });
     return;
   }
   try {
-    const r = await fetch(
-      `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + PAT,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          query:
-            "SELECT * FROM registrations ORDER BY created_at DESC LIMIT 500"
-        })
-      }
-    );
-    const rows = await r.json();
-    if (!Array.isArray(rows)) {
-      res.status(502).json({ error: "unexpected response", detail: rows });
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Fetch registrations sorted by newest first (limit 500)
+    const { data: rows, error } = await supabase
+      .from("registrations")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) {
+      res.status(500).json({ error: error.message });
       return;
     }
     res.status(200).json({ count: rows.length, rows });

@@ -1,0 +1,10 @@
+{
+  "name": "ssc-admin",
+  "version": "1.0.0",
+  "description": "Swift Student Challenge Admin Portal",
+  "main": "api/entries.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
+    "nodemailer": "^6.9.9"
+  }
+}
