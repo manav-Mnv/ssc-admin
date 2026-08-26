@@ -1,0 +1,15 @@
+# Vercel cache (may contain auth tokens — never commit)
+.vercel
+.vercel/
+
+# Local env / secrets
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Deps
+node_modules/
+
+# Logs
+*.log

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SSC 2027 — Submissions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Subtle background accent -->
+  <div class="bg-accent g1"></div>
+  <div class="bg-accent g2"></div>
+
+  <!-- Passcode gate -->
+  <div id="gate" class="gate">
+    <div class="gate-card card">
+      <div class="gate-mark">
+        <img src="assets/swift-nav.png" class="swift-img" alt="Swift">
+      </div>
+      <h2>Admin Access</h2>
+      <p class="gate-sub">Enter the passcode to view submissions.</p>
+      <input id="gateInput" type="password" class="field" placeholder="Passcode" autocomplete="off">
+      <button id="gateBtn" class="btn">Unlock</button>
+      <p id="gateErr" class="gate-err"></p>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <main id="app" class="app hidden">
+    <header class="topbar card">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="assets/swift-nav.png" class="swift-img" alt="Swift">
+        </div>
+        <div class="brand-text">
+          <h1>Swift Student Challenge 2027</h1>
+          <p class="sub">Submissions · AATC, Parul University</p>
+        </div>
+      </div>
+      <div class="count-pill pill"><span id="count">0</span> entries</div>
+    </header>
+
+    <!-- Stats row -->
+    <section class="stats-grid">
+      <div class="stat card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total</div></div>
+      <div class="stat card"><div class="stat-num" id="statPiet">0</div><div class="stat-label">PIET</div></div>
+      <div class="stat card"><div class="stat-num" id="statPit">0</div><div class="stat-label">PIT</div></div>
+      <div class="stat card"><div class="stat-num" id="statOther">0</div><div class="stat-label">Other</div></div>
+    </section>
+
+    <!-- Analytics -->
+    <section class="analytics">
+      <div class="analytic card">
+        <h3>Faculty mix</h3>
+        <div id="facultyBars" class="bars"></div>
+      </div>
+      <div class="analytic card">
+        <h3>Student status</h3>
+        <div id="statusBars" class="bars"></div>
+      </div>
+    </section>
+
+    <!-- Online presence + segments -->
+    <section class="analytics">
+      <div class="analytic card">
+        <h3>Online presence</h3>
+        <div id="linkBars" class="bars"></div>
+      </div>
+      <div class="analytic card">
+        <h3>Filter by segment</h3>
+        <div id="segmentChips" class="chips"></div>
+        <p id="activeFilterNote" class="filter-note"></p>
+      </div>
+    </section>
+
+    <section class="controls card">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" class="field bare" placeholder="Search name, email, faculty…">
+      </div>
+      <button id="refresh" class="btn btn-ghost">Refresh</button>
+    </section>
+
+    <section id="tableWrap" class="table-wrap card">
+      <div class="loading">Loading submissions…</div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
