@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
     return;
   }
   // Passcode gate check
-  if (ADMIN_KEY && req.headers["x-admin-key"] !== ADMIN_KEY) {
+  if (!ADMIN_KEY || req.headers["x-admin-key"] !== ADMIN_KEY) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }

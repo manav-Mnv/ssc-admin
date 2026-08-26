@@ -9,8 +9,12 @@ module.exports = async function handler(req, res) {
     res.status(405).json({ error: "method not allowed" });
     return;
   }
-  if (ADMIN_KEY && req.headers["x-admin-key"] !== ADMIN_KEY) {
+  if (!ADMIN_KEY || req.headers["x-admin-key"] !== ADMIN_KEY) {
     res.status(401).json({ error: "unauthorized" });
+    return;
+  }
+  if (!supabaseUrl || !supabaseServiceKey) {
+    res.status(500).json({ error: "Server error: Supabase credentials not configured." });
     return;
   }
   try {
