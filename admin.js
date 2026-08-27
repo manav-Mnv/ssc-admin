@@ -378,9 +378,14 @@ function renderTable(query) {
             <th>#</th>
             <th>Name</th>
             <th>Email</th>
+            <th>Phone</th>
             <th>Faculty</th>
-            <th>Student Status</th>
-            <th>Enrollment ID</th>
+            <th>Programme</th>
+            <th>Sem</th>
+            <th>Email Type</th>
+            <th>Enrollment No.</th>
+            <th>Mac Access</th>
+            <th>App Idea</th>
             <th>Submitted</th>
             <th>Email Status</th>
             <th></th>
@@ -393,20 +398,43 @@ function renderTable(query) {
       const idx = ALL_ROWS.indexOf(r) + 1;
       const dateStr = fmtDate(r.created_at);
       const isSent = r.email_sent;
+
+      // Faculty pill
       const fac = (r.faculty_institute || "").trim().toUpperCase();
       let facClass = "faculty-pill";
       if (fac.includes("PIET")) facClass += " piet";
       else if (fac.includes("PIT")) facClass += " pit";
 
+      // Email type badge
+      const hasUni = r.has_uni_email === true || r.has_uni_email === "true";
+      const emailTypeBadge = hasUni
+        ? `<span class="status-indicator sent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>🎓 Uni</span></span>`
+        : `<span class="status-indicator unsent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>📧 Personal</span></span>`;
+
+      // App idea preview (first 40 chars)
+      const rawIdea = String(r.idea_description || r.app_playground_idea || r.playground_idea || "").trim();
+      const ideaPreview = rawIdea.length > 0
+        ? `<span title="${esc(rawIdea)}" style="cursor:default;">${esc(rawIdea.slice(0, 38))}${rawIdea.length > 38 ? "…" : ""}</span>`
+        : `<span style="color:var(--text-muted,#888);font-size:11px;">—</span>`;
+
+      // Mac access short label
+      const macRaw = String(r.mac_access || "").trim();
+      const macLabel = macRaw || "—";
+
       html += `
         <tr class="row" data-id="${r.id || idx}">
-          <td>${idx}</td>
+          <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
           <td class="name-cell">${esc(r.full_name || "N/A")}</td>
-          <td class="email-cell">${esc(r.email || "N/A")}</td>
+          <td class="email-cell" style="font-size:12.5px;">${esc(r.email || "N/A")}</td>
+          <td style="font-size:12.5px;letter-spacing:0.3px;">${esc(r.contact_number || "—")}</td>
           <td><span class="${facClass}">${esc(r.faculty_institute || "Other")}</span></td>
-          <td>${esc(r.student_status || "Fresher")}</td>
-          <td class="enrollment-cell">${esc(r.enrollment_id || r.enrollment_no || "N/A")}</td>
-          <td style="color:var(--text-secondary);font-size:12.5px;">${esc(dateStr)}</td>
+          <td style="font-size:12px;">${esc(r.programme_course || "—")}</td>
+          <td style="text-align:center;font-size:12px;">${esc(String(r.current_semester_year || "—"))}</td>
+          <td>${emailTypeBadge}</td>
+          <td class="enrollment-cell">${esc(r.enrollment_number || r.enrollment_id || r.enrollment_no || "—")}</td>
+          <td style="font-size:12px;">${esc(macLabel)}</td>
+          <td style="font-size:12px;max-width:160px;overflow:hidden;">${ideaPreview}</td>
+          <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">${esc(dateStr)}</td>
           <td>
             <span class="status-indicator ${isSent ? 'sent' : 'unsent'}">
               <span class="status-dot"></span>
@@ -824,31 +852,102 @@ function exportCSV() {
     return;
   }
 
-  // Extract all keys dynamically
-  const headers = Object.keys(rows[0]);
-  
-  // Build CSV strings
-  let csvContent = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(",") + "\n";
-  
+  // ── Structured CSV column map (matches Google Sheet column order) ──────────
+  const CSV_COLUMNS = [
+    { header: "Timestamp",                  key: "created_at",             type: "date"    },
+    { header: "Full Name",                  key: "full_name",               type: "text"    },
+    { header: "Primary Email",              key: "email",                   type: "text"    },
+    { header: "WhatsApp / Phone",           key: "contact_number",          type: "text"    },
+    { header: "Faculty / Institute",        key: "faculty_institute",       type: "text"    },
+    { header: "Programme / Course",         key: "programme_course",        type: "text"    },
+    { header: "Semester / Year",            key: "current_semester_year",   type: "text"    },
+    { header: "Division / Batch",           key: "division_batch",          type: "text"    },
+    { header: "Enrollment Number",          key: "enrollment_number",       type: "text"    },
+    { header: "Has University Email",       key: "has_uni_email",           type: "bool"    },
+    { header: "University Email",           key: "uni_email",               type: "text"    },
+    { header: "Personal Email",             key: "personal_email",          type: "text"    },
+    { header: "Student Status",             key: "student_status",          type: "text"    },
+    { header: "Why Interested",             key: "why_interested",          type: "text"    },
+    { header: "Has App Idea",               key: "has_idea",                type: "text"    },
+    { header: "App Idea Description",       key: "idea_description",        type: "text"    },
+    { header: "Excitement Areas",           key: "excitement_level",        type: "array"   },
+    { header: "Build Interest Areas",       key: "build_interest",          type: "array"   },
+    { header: "Mac / iPad Access",          key: "mac_access",              type: "text"    },
+    { header: "Device Usage Frequency",     key: "device_frequency",        type: "text"    },
+    { header: "Mac Lab Needed",             key: "needs_mac_lab",           type: "text"    },
+    { header: "Prep Hours / Week",          key: "hours_per_week_prep",     type: "text"    },
+    { header: "App Dev Experience",         key: "app_experience",          type: "text"    },
+    { header: "Apple Platform Experience",  key: "apple_experience",        type: "text"    },
+    { header: "Skills / Interests",         key: "interests_improving",     type: "array"   },
+    { header: "Previous Competitions",      key: "previous_competitions",   type: "bool"    },
+    { header: "Competition Details",        key: "competition_details",     type: "text"    },
+    { header: "Commitment Level",           key: "commitment_level",        type: "text"    },
+    { header: "Program Hours / Week",       key: "hours_per_week_program",  type: "text"    },
+    { header: "Preferred Work Schedule",    key: "work_schedule",           type: "array"   },
+    { header: "Willing to Attend Sessions", key: "willing_to_attend",       type: "text"    },
+    { header: "GitHub",                     key: "github_profile",          type: "text"    },
+    { header: "LinkedIn",                   key: "linkedin_profile",        type: "text"    },
+    { header: "Portfolio",                  key: "portfolio_website",       type: "text"    },
+    { header: "Additional Comments",        key: "anything_else",           type: "text"    },
+    { header: "Confirmation Email Sent",    key: "email_sent",              type: "bool"    },
+  ];
+
+  // ── Value formatter ─────────────────────────────────────────────────────────
+  function csvFormat(val, type) {
+    if (val === null || val === undefined || val === "") return "";
+    if (type === "bool") {
+      if (val === true  || val === "true"  || val === 1 || val === "yes") return "Yes";
+      if (val === false || val === "false" || val === 0 || val === "no")  return "No";
+      return String(val);
+    }
+    if (type === "array") {
+      if (Array.isArray(val)) return val.join(", ");
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed.join(", ");
+      } catch (_) {}
+      return String(val).replace(/[\[\]"]/g, "");
+    }
+    if (type === "date") {
+      try {
+        const d = new Date(val);
+        const day  = String(d.getDate()).padStart(2, "0");
+        const mon  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+        const yr   = d.getFullYear();
+        const hh   = String(d.getHours()).padStart(2, "0");
+        const mm   = String(d.getMinutes()).padStart(2, "0");
+        return `${day} ${mon} ${yr}, ${hh}:${mm}`;
+      } catch (_) { return String(val); }
+    }
+    return String(val);
+  }
+
+  // ── Build CSV ───────────────────────────────────────────────────────────────
+  const csvEsc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+
+  let csvContent = CSV_COLUMNS.map(c => csvEsc(c.header)).join(",") + "\n";
+
   rows.forEach((row) => {
-    const rowValues = headers.map((header) => {
-      const val = row[header];
-      if (val === null || val === undefined) return '""';
-      const cleanVal = String(val).replace(/"/g, '""');
-      return `"${cleanVal}"`;
+    const rowValues = CSV_COLUMNS.map(({ key, type }) => {
+      // Fallback aliases for enrollment number field
+      let val = row[key];
+      if (key === "enrollment_number" && (val === null || val === undefined || val === "")) {
+        val = row["enrollment_id"] || row["enrollment_no"] || "";
+      }
+      return csvEsc(csvFormat(val, type));
     });
     csvContent += rowValues.join(",") + "\n";
   });
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  
+
   const timestamp = new Date().toISOString().slice(0, 10);
   link.setAttribute("href", url);
-  link.setAttribute("download", `ssc_registrations_export_${timestamp}.csv`);
-  link.style.visibility = 'hidden';
-  
+  link.setAttribute("download", `SSC2027_Registrations_${timestamp}.csv`);
+  link.style.visibility = "hidden";
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
