@@ -72,6 +72,10 @@
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span>Overview</span>
         </button>
+        <button class="nav-tab" data-page="ideas">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2a6 6 0 0 1 6 6c0 2.22-1.21 4.15-3 5.19V16a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2.81C7.21 12.15 6 10.22 6 8a6 6 0 0 1 6-6z"></path><path d="M9 21h6"></path></svg>
+          <span>App Idea Submissions</span>
+        </button>
         <button class="nav-tab" data-page="uni-mail">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           <span>University Mail</span>
@@ -160,12 +164,29 @@
       </section>
 
       <!-- Faculty & Department Breakdown Dashboard Grid -->
-      <section class="faculty-breakdown-grid">
+      <section class="faculty-breakdown-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="ideas">
+          <div class="dept-header">
+            <div class="dept-title-wrap">
+              <span class="dept-icon idea" style="background:rgba(240,81,56,0.1);color:#f05138;border:1px solid rgba(240,81,56,0.2);">ID</span>
+              <h3>App Idea Submissions ↗</h3>
+            </div>
+            <div class="dept-count-badge" id="deptIdeasCount">0</div>
+          </div>
+          <p class="dept-description">Submissions with App Playground descriptions</p>
+          <div class="dept-progress-container">
+            <div class="dept-progress-bar">
+              <div id="deptIdeasProgress" class="dept-progress-fill piet" style="width: 0%; background: linear-gradient(135deg, #f05138 0%, #ea580c 100%);"></div>
+            </div>
+            <div class="dept-progress-label" id="deptIdeasPct">0% of total</div>
+          </div>
+        </div>
+
         <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="uni-mail">
           <div class="dept-header">
             <div class="dept-title-wrap">
               <span class="dept-icon piet">UN</span>
-              <h3>University Mail Submissions ↗</h3>
+              <h3>University Mail ↗</h3>
             </div>
             <div class="dept-count-badge" id="deptPietCount">0</div>
           </div>
@@ -182,7 +203,7 @@
           <div class="dept-header">
             <div class="dept-title-wrap">
               <span class="dept-icon pit">PR</span>
-              <h3>Personal Mail Submissions ↗</h3>
+              <h3>Personal Mail ↗</h3>
             </div>
             <div class="dept-count-badge" id="deptPitCount">0</div>
           </div>
@@ -199,7 +220,7 @@
           <div class="dept-header">
             <div class="dept-title-wrap">
               <span class="dept-icon other">AL</span>
-              <h3>Total Registered Submissions ↗</h3>
+              <h3>Total Submissions ↗</h3>
             </div>
             <div class="dept-count-badge" id="deptOtherCount">0</div>
           </div>

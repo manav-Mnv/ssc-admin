@@ -68,6 +68,7 @@ function hasLink(r, col) {
 const SEGMENTS = [
   { key: "unsent", label: "Email Pending", test: (r) => !r.email_sent },
   { key: "sent", label: "Email Sent", test: (r) => r.email_sent },
+  { key: "ideas", label: "App Ideas Ready", test: (r) => String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim().length > 0 },
   { key: "linkedin", label: "Has LinkedIn", test: (r) => hasLink(r, LINK_COLS.linkedin) },
   { key: "github", label: "Has GitHub", test: (r) => hasLink(r, LINK_COLS.github) },
   { key: "web", label: "Has Portfolio", test: (r) => hasLink(r, LINK_COLS.web) }
@@ -344,6 +345,10 @@ function renderTable(query) {
     rows = rows.filter((r) => {
       if (ACTIVE_DEPARTMENT === "uni-mail") return r.has_uni_email === true;
       if (ACTIVE_DEPARTMENT === "personal-mail") return r.has_uni_email === false;
+      if (ACTIVE_DEPARTMENT === "ideas") {
+        const ideaText = String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim();
+        return ideaText.length > 0;
+      }
       return true;
     });
   }
@@ -626,6 +631,7 @@ function updateFacultyBreakdown(rows) {
   const total = rows.length;
   let uniCount = 0;
   let personalCount = 0;
+  let ideasCount = 0;
   
   rows.forEach(r => {
     if (r.has_uni_email) {
@@ -633,14 +639,23 @@ function updateFacultyBreakdown(rows) {
     } else {
       personalCount++;
     }
+    const ideaText = String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim();
+    if (ideaText.length > 0) {
+      ideasCount++;
+    }
   });
   
   // Calculate percentages
   const uniPct = total ? Math.round((uniCount / total) * 100) : 0;
   const personalPct = total ? Math.round((personalCount / total) * 100) : 0;
+  const ideasPct = total ? Math.round((ideasCount / total) * 100) : 0;
   const allPct = 100;
   
   // Update HTML elements
+  const deptIdeasCount = $("#deptIdeasCount");
+  const deptIdeasProgress = $("#deptIdeasProgress");
+  const deptIdeasPct = $("#deptIdeasPct");
+
   const deptPietCount = $("#deptPietCount");
   const deptPietProgress = $("#deptPietProgress");
   const deptPietPct = $("#deptPietPct");
@@ -652,6 +667,10 @@ function updateFacultyBreakdown(rows) {
   const deptOtherCount = $("#deptOtherCount");
   const deptOtherProgress = $("#deptOtherProgress");
   const deptOtherPct = $("#deptOtherPct");
+
+  if (deptIdeasCount) deptIdeasCount.textContent = ideasCount;
+  if (deptIdeasProgress) deptIdeasProgress.style.width = `${ideasPct}%`;
+  if (deptIdeasPct) deptIdeasPct.textContent = `${ideasPct}% of total registrations`;
   
   if (deptPietCount) deptPietCount.textContent = uniCount;
   if (deptPietProgress) deptPietProgress.style.width = `${uniPct}%`;
@@ -874,7 +893,10 @@ function switchPage(pageId) {
       targetDiv.classList.remove("hidden");
       
       // Update department state filters
-      if (pageId === "uni-mail") {
+      if (pageId === "ideas") {
+        ACTIVE_SEGMENT = null;
+        ACTIVE_DEPARTMENT = "ideas";
+      } else if (pageId === "uni-mail") {
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = "uni-mail";
       } else if (pageId === "personal-mail") {
