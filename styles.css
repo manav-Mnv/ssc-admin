@@ -1058,3 +1058,150 @@ tr.row:hover .chevy-btn {
     grid-column: span 1;
   }
 }
+
+/* --- Premium Custom Styling for Developer & Challenge Idea Tab --- */
+.idea-showcase {
+  background: linear-gradient(135deg, rgba(240, 81, 56, 0.08), rgba(255, 123, 2, 0.03));
+  border: 1px solid rgba(240, 81, 56, 0.2) !important;
+  border-left: 4px solid var(--swift) !important;
+  border-radius: var(--radius-md);
+  padding: 24px 28px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.idea-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.idea-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  background: var(--swift);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+}
+.idea-banner h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.idea-text-box p {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  opacity: 0.95;
+  white-space: pre-wrap;
+}
+
+.idea-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+}
+.experience-badge {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--swift-orange);
+}
+.commitment-info {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+.section-subtitle {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.devices-panel, .links-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+}
+.devices-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.device-pill {
+  flex: 1;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.01);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 13.5px;
+  transition: all 0.3s ease;
+}
+.device-pill svg {
+  opacity: 0.6;
+}
+.device-pill.active {
+  background: rgba(48, 209, 88, 0.08);
+  border-color: rgba(48, 209, 88, 0.25);
+  color: var(--accent-green);
+}
+.device-pill.active svg {
+  opacity: 1;
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.link-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.link-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.link-card.github:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.link-card.linkedin:hover {
+  background: rgba(0, 162, 255, 0.06);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+.link-card.portfolio:hover {
+  background: rgba(255, 123, 2, 0.06);
+  border-color: var(--swift-orange);
+  color: var(--swift-orange);
+}
