@@ -802,6 +802,18 @@ function exportCSV() {
     );
   });
 
+  if (ACTIVE_DEPARTMENT) {
+    rows = rows.filter((r) => {
+      if (ACTIVE_DEPARTMENT === "uni-mail") return r.has_uni_email === true;
+      if (ACTIVE_DEPARTMENT === "personal-mail") return r.has_uni_email === false;
+      if (ACTIVE_DEPARTMENT === "ideas") {
+        const ideaText = String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim();
+        return ideaText.length > 0;
+      }
+      return true;
+    });
+  }
+
   if (ACTIVE_SEGMENT) {
     const seg = SEGMENTS.find((s) => s.key === ACTIVE_SEGMENT);
     if (seg) rows = rows.filter(seg.test);
