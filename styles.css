@@ -1,42 +1,42 @@
 /* --- Color Palette and Tokens --- */
 :root {
-  --bg-dark: #07080d;
-  --bg-darker: #040508;
-  --panel-bg: rgba(14, 18, 30, 0.55);
-  --panel-bg-solid: #0e121e;
-  --border-light: rgba(255, 255, 255, 0.06);
+  --bg-dark: #f8fafc;
+  --bg-darker: #f1f5f9;
+  --panel-bg: rgba(255, 255, 255, 0.85);
+  --panel-bg-solid: #ffffff;
+  --border-light: rgba(15, 23, 42, 0.08);
   --border-active: rgba(240, 81, 56, 0.4);
   
   --swift: #F05138;
   --swift-orange: #FF7B02;
-  --swift-glow: rgba(240, 81, 56, 0.3);
+  --swift-glow: rgba(240, 81, 56, 0.15);
   --swift-gradient: linear-gradient(135deg, #FF7B02, #F05138);
 
-  --accent-blue: #00A2FF;
-  --accent-blue-glow: rgba(0, 162, 255, 0.2);
-  --accent-blue-gradient: linear-gradient(135deg, #00C6FF, #0072FF);
+  --accent-blue: #0084FF;
+  --accent-blue-glow: rgba(0, 132, 255, 0.15);
+  --accent-blue-gradient: linear-gradient(135deg, #38BDF8, #0084FF);
 
-  --accent-purple: #AF52DE;
-  --accent-purple-gradient: linear-gradient(135deg, #BF5AF2, #AF52DE);
+  --accent-purple: #9333EA;
+  --accent-purple-gradient: linear-gradient(135deg, #A855F7, #9333EA);
 
-  --accent-green: #30D158;
-  --accent-green-glow: rgba(48, 209, 88, 0.2);
-  --accent-green-gradient: linear-gradient(135deg, #30D158, #10B981);
+  --accent-green: #10B981;
+  --accent-green-glow: rgba(16, 185, 129, 0.15);
+  --accent-green-gradient: linear-gradient(135deg, #34D399, #10B981);
 
-  --accent-amber: #FFD60A;
-  --accent-amber-glow: rgba(255, 214, 10, 0.2);
-  --accent-amber-gradient: linear-gradient(135deg, #FFD60A, #FF9F0A);
+  --accent-amber: #D97706;
+  --accent-amber-glow: rgba(217, 119, 6, 0.15);
+  --accent-amber-gradient: linear-gradient(135deg, #FBBF24, #D97706);
 
-  --text-primary: #f5f6fa;
-  --text-secondary: #9aa0a6;
-  --text-muted: #5f6368;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
   
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 8px;
   
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --shadow-main: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  --shadow-main: 0 10px 30px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 /* --- Base Resets --- */
@@ -62,8 +62,8 @@ html, body {
   z-index: 0;
   border-radius: 50%;
   filter: blur(140px);
-  opacity: 0.15;
-  mix-blend-mode: screen;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
 }
 .g1 {
   width: 500px;
@@ -107,14 +107,14 @@ html, body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.02);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.1);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.2);
 }
 
 /* --- Glassmorphic Card Helper --- */
@@ -581,14 +581,14 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: 10px 18px;
   transition: border-color 0.3s ease;
 }
 .search-box:focus-within {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--swift);
 }
 .search-icon {
   color: var(--text-muted);
@@ -741,7 +741,7 @@ table.entries thead th {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-light);
-  background: rgba(14, 18, 30, 0.95);
+  background: #f1f5f9;
   position: sticky;
   top: 0;
   z-index: 5;
@@ -757,7 +757,7 @@ table.entries tbody tr.row {
   transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 table.entries tbody tr.row:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(15, 23, 42, 0.02);
 }
 table.entries tbody tr:last-child td {
   border-bottom: none;
@@ -1209,7 +1209,7 @@ tr.row:hover .chevy-btn {
 /* --- Inline Details CSS --- */
 .detail-row td {
   padding: 0 !important;
-  background: rgba(0, 0, 0, 0.15) !important;
+  background: rgba(15, 23, 42, 0.02) !important;
   border-bottom: 1px solid var(--border-light);
 }
 .detail-content-wrapper {
@@ -1217,16 +1217,16 @@ tr.row:hover .chevy-btn {
 }
 .detail-inner {
   margin: 16px 20px 24px 20px;
-  background: rgba(14, 18, 30, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid var(--border-light) !important;
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
   overflow: hidden;
 }
 .detail-tabs {
   display: flex;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.02);
+  border-bottom: 1px solid var(--border-light);
   padding: 0 20px;
 }
 .detail-tab-btn {
@@ -1270,4 +1270,113 @@ tr.row:hover .chevy-btn {
 tr.row.open .chevy-btn {
   transform: rotate(90deg);
   color: var(--swift-orange);
+}
+
+/* --- Department Stats Dashboard Grid --- */
+.faculty-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.dept-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dept-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dept-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dept-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.dept-icon.piet {
+  background: rgba(0, 132, 255, 0.08);
+  border: 1px solid rgba(0, 132, 255, 0.15);
+  color: var(--accent-blue);
+}
+.dept-icon.pit {
+  background: rgba(147, 51, 234, 0.08);
+  border: 1px solid rgba(147, 51, 234, 0.15);
+  color: var(--accent-purple);
+}
+.dept-icon.other {
+  background: rgba(240, 81, 56, 0.08);
+  border: 1px solid rgba(240, 81, 56, 0.15);
+  color: var(--swift-orange);
+}
+.dept-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.dept-count-badge {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.04);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+.dept-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.dept-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.dept-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.dept-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  width: 0%;
+  transition: width 0.5s ease-out;
+}
+.dept-progress-fill.piet {
+  background: var(--accent-blue-gradient);
+}
+.dept-progress-fill.pit {
+  background: var(--accent-purple-gradient);
+}
+.dept-progress-fill.other {
+  background: var(--swift-gradient);
+}
+.dept-progress-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .faculty-breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }

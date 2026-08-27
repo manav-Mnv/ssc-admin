@@ -88,22 +88,22 @@
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon-wrapper purple">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Mac vs iPad Access</div>
-          <div class="stat-num" id="statMacIpad">0 / 0</div>
-          <div class="stat-sub">Mac OS vs iPad OS users</div>
+          <div class="stat-label">PIET Submissions</div>
+          <div class="stat-num" id="statPIET">0</div>
+          <div class="stat-sub">Engg. & Tech Institute</div>
         </div>
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon-wrapper green">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Interested Tracks</div>
-          <div class="stat-num" id="statInterests">0</div>
-          <div class="stat-sub">Students with ideas</div>
+          <div class="stat-label">PIT & Other Submissions</div>
+          <div class="stat-num" id="statPIT">0</div>
+          <div class="stat-sub">PIT & other faculties</div>
         </div>
       </div>
     </section>
@@ -135,22 +135,56 @@
       </div>
     </section>
 
-    <!-- Analytics Charts Grid -->
-    <section class="analytics-grid">
-      <div class="chart-card glass-card">
-        <div class="chart-header">
-          <h3>Ratio of Mac vs iPad Device Access</h3>
+    <!-- Faculty & Department Breakdown Dashboard Grid -->
+    <section class="faculty-breakdown-grid">
+      <div class="dept-card glass-card">
+        <div class="dept-header">
+          <div class="dept-title-wrap">
+            <span class="dept-icon piet">PI</span>
+            <h3>PIET Department</h3>
+          </div>
+          <div class="dept-count-badge" id="deptPietCount">0</div>
         </div>
-        <div class="chart-container">
-          <canvas id="deviceChart"></canvas>
+        <p class="dept-description">Parul Institute of Engineering & Technology</p>
+        <div class="dept-progress-container">
+          <div class="dept-progress-bar">
+            <div id="deptPietProgress" class="dept-progress-fill piet" style="width: 0%"></div>
+          </div>
+          <div class="dept-progress-label" id="deptPietPct">0% of total</div>
         </div>
       </div>
-      <div class="chart-card glass-card">
-        <div class="chart-header">
-          <h3>Registrations by Faculty / Department</h3>
+      
+      <div class="dept-card glass-card">
+        <div class="dept-header">
+          <div class="dept-title-wrap">
+            <span class="dept-icon pit">PT</span>
+            <h3>PIT Department</h3>
+          </div>
+          <div class="dept-count-badge" id="deptPitCount">0</div>
         </div>
-        <div class="chart-container">
-          <canvas id="facultyChart"></canvas>
+        <p class="dept-description">Parul Institute of Technology</p>
+        <div class="dept-progress-container">
+          <div class="dept-progress-bar">
+            <div id="deptPitProgress" class="dept-progress-fill pit" style="width: 0%"></div>
+          </div>
+          <div class="dept-progress-label" id="deptPitPct">0% of total</div>
+        </div>
+      </div>
+      
+      <div class="dept-card glass-card">
+        <div class="dept-header">
+          <div class="dept-title-wrap">
+            <span class="dept-icon other">OT</span>
+            <h3>Other Institutes</h3>
+          </div>
+          <div class="dept-count-badge" id="deptOtherCount">0</div>
+        </div>
+        <p class="dept-description">Other departments and colleges</p>
+        <div class="dept-progress-container">
+          <div class="dept-progress-bar">
+            <div id="deptOtherProgress" class="dept-progress-fill other" style="width: 0%"></div>
+          </div>
+          <div class="dept-progress-label" id="deptOtherPct">0% of total</div>
         </div>
       </div>
     </section>

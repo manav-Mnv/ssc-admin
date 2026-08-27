@@ -21,8 +21,8 @@ const searchEl = $("#search");
 const statTotal = $("#statTotal");
 const statEmailProgress = $("#statEmailProgress");
 const statEmailRatio = $("#statEmailRatio");
-const statMacIpad = $("#statMacIpad");
-const statInterests = $("#statInterests");
+const statPIET = $("#statPIET");
+const statPIT = $("#statPIT");
 
 const startDispatchBtn = $("#startDispatchBtn");
 const queueStatusText = $("#queueStatusText");
@@ -47,8 +47,7 @@ let ALL_ROWS = [];
 let ACTIVE_SEGMENT = null;
 let activeRowData = null;
 let currentTab = "all";
-let deviceChartInstance = null;
-let facultyChartInstance = null;
+// Chart instances removed
 let isDispatching = false;
 let stopDispatchFlag = false;
 
@@ -69,27 +68,7 @@ const SEGMENTS = [
   { key: "sent", label: "Email Sent", test: (r) => r.email_sent },
   { key: "linkedin", label: "Has LinkedIn", test: (r) => hasLink(r, LINK_COLS.linkedin) },
   { key: "github", label: "Has GitHub", test: (r) => hasLink(r, LINK_COLS.github) },
-  { key: "web", label: "Has Portfolio", test: (r) => hasLink(r, LINK_COLS.web) },
-  {
-    key: "mac",
-    label: "Mac User",
-    test: (r) => {
-      const keys = Object.keys(r);
-      const macKey = keys.find(k => k.toLowerCase().includes('mac') && !k.toLowerCase().includes('machine'));
-      if (macKey) return r[macKey] === true || String(r[macKey]).toLowerCase() === 'yes' || String(r[macKey]).toLowerCase() === 'true';
-      return String(r.mac_user).toLowerCase() === 'true' || r.mac_user === true;
-    }
-  },
-  {
-    key: "ipad",
-    label: "iPad User",
-    test: (r) => {
-      const keys = Object.keys(r);
-      const ipadKey = keys.find(k => k.toLowerCase().includes('ipad'));
-      if (ipadKey) return r[ipadKey] === true || String(r[ipadKey]).toLowerCase() === 'yes' || String(r[ipadKey]).toLowerCase() === 'true';
-      return String(r.ipad_user).toLowerCase() === 'true' || r.ipad_user === true;
-    }
-  }
+  { key: "web", label: "Has Portfolio", test: (r) => hasLink(r, LINK_COLS.web) }
 ];
 
 // Tab Categorization Schema
@@ -100,7 +79,6 @@ const CATEGORIES = {
     "faculty_institute", "programme_course", "current_semester_year", "semester", "cgpa", "gpa"
   ],
   swift: [
-    "mac_user", "has_mac", "do_you_have_mac", "ipad_user", "has_ipad", "do_you_have_ipad", 
     "coding_experience", "swift_experience", "app_playground_idea", "idea_description", 
     "playground_idea", "commitment", "hours_per_week", "github_profile", "linkedin_profile", 
     "portfolio_website", "email_sent", "created_at"
@@ -225,7 +203,7 @@ async function load(isSilent = false) {
     countEl.textContent = data.count;
     
     calculateMetrics(data.rows);
-    renderCharts(data.rows);
+    updateFacultyBreakdown(data.rows);
     renderTable(searchEl.value);
   } catch (e) {
     tableWrap.innerHTML = `
@@ -276,53 +254,24 @@ function calculateMetrics(rows) {
     }
   }
 
-  // 2. Mac vs iPad user metrics
-  let macCount = 0;
-  let ipadCount = 0;
+  // 2. PIET & PIT metrics
+  let pietCount = 0;
+  let pitCount = 0;
+  let otherCount = 0;
   
-  if (total > 0) {
-    const keys = Object.keys(rows[0]);
-    const macKey = keys.find(k => k.toLowerCase().includes('mac') && !k.toLowerCase().includes('machine'));
-    const ipadKey = keys.find(k => k.toLowerCase().includes('ipad'));
-    const deviceKey = keys.find(k => k.toLowerCase().includes('device'));
+  rows.forEach(r => {
+    const fac = String(r.faculty_institute || "").trim().toUpperCase();
+    if (fac.includes("PIET")) {
+      pietCount++;
+    } else if (fac.includes("PIT")) {
+      pitCount++;
+    } else {
+      otherCount++;
+    }
+  });
 
-    rows.forEach(r => {
-      // Check Mac
-      if (macKey && (r[macKey] === true || String(r[macKey]).toLowerCase() === 'yes' || String(r[macKey]).toLowerCase() === 'true')) {
-        macCount++;
-      } else if (deviceKey && String(r[deviceKey]).toLowerCase().includes('mac')) {
-        macCount++;
-      } else if (r.mac_user === true || String(r.mac_user).toLowerCase() === 'true') {
-        macCount++;
-      }
-      
-      // Check iPad
-      if (ipadKey && (r[ipadKey] === true || String(r[ipadKey]).toLowerCase() === 'yes' || String(r[ipadKey]).toLowerCase() === 'true')) {
-        ipadCount++;
-      } else if (deviceKey && String(r[deviceKey]).toLowerCase().includes('ipad')) {
-        ipadCount++;
-      } else if (r.ipad_user === true || String(r.ipad_user).toLowerCase() === 'true') {
-        ipadCount++;
-      }
-    });
-  }
-  statMacIpad.textContent = `${macCount} / ${ipadCount}`;
-
-  // 3. Interested tracks (students who provided ideas)
-  let interestCount = 0;
-  if (total > 0) {
-    const keys = Object.keys(rows[0]);
-    const ideaKey = keys.find(k => k.toLowerCase().includes('idea') || k.toLowerCase().includes('description') || k.toLowerCase().includes('track') || k.toLowerCase().includes('interest'));
-    
-    rows.forEach(r => {
-      if (ideaKey && r[ideaKey] && String(r[ideaKey]).trim() !== "" && String(r[ideaKey]).toLowerCase() !== "null") {
-        interestCount++;
-      } else if (r.app_playground_idea && String(r.app_playground_idea).trim() !== "" && String(r.app_playground_idea).toLowerCase() !== "null") {
-        interestCount++;
-      }
-    });
-  }
-  statInterests.textContent = interestCount;
+  if (statPIET) statPIET.textContent = pietCount;
+  if (statPIT) statPIT.textContent = `${pitCount} PIT / ${otherCount} other`;
 
   // 4. Render Segments Filters
   renderSegments(rows);
@@ -545,8 +494,7 @@ function toggleDetailRow(tr, row) {
       const experienceVal = row.coding_experience || row.swift_experience || "";
       const commitmentVal = row.commitment || row.hours_per_week || "";
       
-      const hasMac = row.mac_user === true || String(row.mac_user).toLowerCase() === "true" || String(row.has_mac).toLowerCase() === "true" || String(row.do_you_have_mac).toLowerCase().includes("yes");
-      const hasIpad = row.ipad_user === true || String(row.ipad_user).toLowerCase() === "true" || String(row.has_ipad).toLowerCase() === "true" || String(row.do_you_have_ipad).toLowerCase().includes("yes");
+      // Mac and iPad variables removed
       
       const github = row.github_profile || "";
       const linkedin = row.linkedin_profile || "";
@@ -576,19 +524,7 @@ function toggleDetailRow(tr, row) {
             <div class="commitment-info">${commitmentVal ? esc(commitmentVal) : 'Not specified'}</div>
           </div>
           
-          <div class="devices-panel span-2">
-            <h4 class="section-subtitle">Device Access Profile</h4>
-            <div class="devices-row">
-              <div class="device-pill ${hasMac ? 'active' : ''}">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-                <span>Mac OS Access: ${hasMac ? 'Yes / Available' : 'No / Not Available'}</span>
-              </div>
-              <div class="device-pill ${hasIpad ? 'active' : ''}">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18"></line></svg>
-                <span>iPad OS Access: ${hasIpad ? 'Yes / Available' : 'No / Not Available'}</span>
-              </div>
-            </div>
-          </div>
+          <!-- Device access section removed -->
 
           <div class="links-panel span-2">
             <h4 class="section-subtitle">Developer Portfolio & Links</h4>
@@ -679,140 +615,53 @@ function toggleDetailRow(tr, row) {
   });
 }
 
-// Chart.js Graphs Rendering
-function renderCharts(rows) {
+// Calculate and update the Faculty & Department breakdown cards
+function updateFacultyBreakdown(rows) {
   const total = rows.length;
+  let pietCount = 0;
+  let pitCount = 0;
+  let otherCount = 0;
   
-  // --- Chart 1: Device Ratio (Pie/Doughnut) ---
-  let macCount = 0;
-  let ipadCount = 0;
-  
-  if (total > 0) {
-    const keys = Object.keys(rows[0]);
-    const macKey = keys.find(k => k.toLowerCase().includes('mac') && !k.toLowerCase().includes('machine'));
-    const ipadKey = keys.find(k => k.toLowerCase().includes('ipad'));
-    const deviceKey = keys.find(k => k.toLowerCase().includes('device'));
-
-    rows.forEach(r => {
-      if (macKey && (r[macKey] === true || String(r[macKey]).toLowerCase() === 'yes' || String(r[macKey]).toLowerCase() === 'true')) {
-        macCount++;
-      } else if (deviceKey && String(r[deviceKey]).toLowerCase().includes('mac')) {
-        macCount++;
-      } else if (r.mac_user === true || String(r.mac_user).toLowerCase() === 'true') {
-        macCount++;
-      }
-      
-      if (ipadKey && (r[ipadKey] === true || String(r[ipadKey]).toLowerCase() === 'yes' || String(r[ipadKey]).toLowerCase() === 'true')) {
-        ipadCount++;
-      } else if (deviceKey && String(r[deviceKey]).toLowerCase().includes('ipad')) {
-        ipadCount++;
-      } else if (r.ipad_user === true || String(r.ipad_user).toLowerCase() === 'true') {
-        ipadCount++;
-      }
-    });
-  }
-  
-  const ctxDevice = $("#deviceChart").getContext("2d");
-  if (deviceChartInstance) {
-    deviceChartInstance.destroy();
-  }
-  
-  deviceChartInstance = new Chart(ctxDevice, {
-    type: 'doughnut',
-    data: {
-      labels: ['Mac OS Access', 'iPad OS Access'],
-      datasets: [{
-        data: [macCount, ipadCount],
-        backgroundColor: ['rgba(240, 81, 56, 0.75)', 'rgba(0, 162, 255, 0.75)'],
-        borderColor: ['#F05138', '#00A2FF'],
-        borderWidth: 2,
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: '#f5f6fa',
-            font: { family: 'Outfit', size: 12, weight: '600' },
-            padding: 18
-          }
-        },
-        tooltip: {
-          backgroundColor: '#0e121e',
-          titleFont: { family: 'Outfit', size: 13, weight: '700' },
-          bodyFont: { family: 'Outfit', size: 13 },
-          borderColor: 'rgba(255, 255, 255, 0.08)',
-          borderWidth: 1
-        }
-      },
-      cutout: '65%'
-    }
-  });
-
-  // --- Chart 2: Faculty Distribution (Bar Chart) ---
-  const facultyCounts = { PIET: 0, PIT: 0, Other: 0 };
   rows.forEach(r => {
-    const fac = (r.faculty_institute || "").trim().toUpperCase();
-    if (fac.includes("PIET")) facultyCounts.PIET++;
-    else if (fac.includes("PIT")) facultyCounts.PIT++;
-    else facultyCounts.Other++;
-  });
-
-  const ctxFaculty = $("#facultyChart").getContext("2d");
-  if (facultyChartInstance) {
-    facultyChartInstance.destroy();
-  }
-
-  facultyChartInstance = new Chart(ctxFaculty, {
-    type: 'bar',
-    data: {
-      labels: ['PIET Faculty', 'PIT Faculty', 'Other Faculties'],
-      datasets: [{
-        label: 'Registrations',
-        data: [facultyCounts.PIET, facultyCounts.PIT, facultyCounts.Other],
-        backgroundColor: [
-          'rgba(0, 162, 255, 0.65)',
-          'rgba(175, 82, 222, 0.65)',
-          'rgba(240, 81, 56, 0.65)'
-        ],
-        borderColor: [
-          '#00A2FF',
-          '#BF5AF2',
-          '#F05138'
-        ],
-        borderWidth: 2,
-        borderRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0e121e',
-          titleFont: { family: 'Outfit', size: 13, weight: '700' },
-          bodyFont: { family: 'Outfit', size: 13 },
-          borderColor: 'rgba(255, 255, 255, 0.08)',
-          borderWidth: 1
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: '#9aa0a6', font: { family: 'Outfit', weight: '600' } }
-        },
-        y: {
-          grid: { color: 'rgba(255, 255, 255, 0.04)' },
-          ticks: { color: '#9aa0a6', font: { family: 'Outfit' }, precision: 0 }
-        }
-      }
+    const fac = String(r.faculty_institute || "").trim().toUpperCase();
+    if (fac.includes("PIET")) {
+      pietCount++;
+    } else if (fac.includes("PIT")) {
+      pitCount++;
+    } else {
+      otherCount++;
     }
   });
+  
+  // Calculate percentages
+  const pietPct = total ? Math.round((pietCount / total) * 100) : 0;
+  const pitPct = total ? Math.round((pitCount / total) * 100) : 0;
+  const otherPct = total ? Math.round((otherCount / total) * 100) : 0;
+  
+  // Update HTML elements
+  const deptPietCount = $("#deptPietCount");
+  const deptPietProgress = $("#deptPietProgress");
+  const deptPietPct = $("#deptPietPct");
+  
+  const deptPitCount = $("#deptPitCount");
+  const deptPitProgress = $("#deptPitProgress");
+  const deptPitPct = $("#deptPitPct");
+  
+  const deptOtherCount = $("#deptOtherCount");
+  const deptOtherProgress = $("#deptOtherProgress");
+  const deptOtherPct = $("#deptOtherPct");
+  
+  if (deptPietCount) deptPietCount.textContent = pietCount;
+  if (deptPietProgress) deptPietProgress.style.width = `${pietPct}%`;
+  if (deptPietPct) deptPietPct.textContent = `${pietPct}% of total registrations`;
+  
+  if (deptPitCount) deptPitCount.textContent = pitCount;
+  if (deptPitProgress) deptPitProgress.style.width = `${pitPct}%`;
+  if (deptPitPct) deptPitPct.textContent = `${pitPct}% of total registrations`;
+  
+  if (deptOtherCount) deptOtherCount.textContent = otherCount;
+  if (deptOtherProgress) deptOtherProgress.style.width = `${otherPct}%`;
+  if (deptOtherPct) deptOtherPct.textContent = `${otherPct}% of total registrations`;
 }
 
 // Automated Batch Email Dispatch Loop
