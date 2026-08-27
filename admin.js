@@ -45,6 +45,8 @@ const modalTabBtns = $$(".modal-tab-btn");
 // Application State
 let ALL_ROWS = [];
 let ACTIVE_SEGMENT = null;
+let ACTIVE_DEPARTMENT = null;
+let ACTIVE_PAGE = "dashboard";
 let activeRowData = null;
 let currentTab = "all";
 // Chart instances removed
@@ -341,6 +343,16 @@ function renderTable(query) {
       String(r.enrollment_id || "").toLowerCase().includes(q)
     );
   });
+
+  if (ACTIVE_DEPARTMENT) {
+    rows = rows.filter((r) => {
+      const fac = String(r.faculty_institute || "").trim().toUpperCase();
+      if (ACTIVE_DEPARTMENT === "PIET") return fac.includes("PIET");
+      if (ACTIVE_DEPARTMENT === "PIT") return fac.includes("PIT");
+      // For other, exclude both PIET and PIT
+      return !fac.includes("PIET") && !fac.includes("PIT");
+    });
+  }
 
   if (ACTIVE_SEGMENT) {
     const seg = SEGMENTS.find((s) => s.key === ACTIVE_SEGMENT);
@@ -841,6 +853,66 @@ function esc(s) {
     .replace(/'/g, "&#039;");
 }
 
+// Single Page Application View Switcher
+function switchPage(pageId) {
+  if (pageId === ACTIVE_PAGE) return;
+  
+  // Highlight active nav tab
+  $$(".nav-tab").forEach(tab => {
+    if (tab.getAttribute("data-page") === pageId) {
+      tab.classList.add("active");
+    } else {
+      tab.classList.remove("active");
+    }
+  });
+  
+  const dashboardDiv = $("#page-dashboard");
+  const regsDiv = $("#page-registrations");
+  
+  const currentDiv = ACTIVE_PAGE === "dashboard" ? dashboardDiv : regsDiv;
+  const targetDiv = pageId === "dashboard" ? dashboardDiv : regsDiv;
+  
+  const tl = gsap.timeline();
+  
+  tl.to(currentDiv, {
+    duration: 0.25,
+    opacity: 0,
+    y: 15,
+    ease: "power2.in",
+    onComplete: () => {
+      currentDiv.classList.add("hidden");
+      targetDiv.classList.remove("hidden");
+      
+      // Update department state filters
+      if (pageId === "piet") {
+        ACTIVE_SEGMENT = null;
+        ACTIVE_DEPARTMENT = "PIET";
+      } else if (pageId === "pit") {
+        ACTIVE_SEGMENT = null;
+        ACTIVE_DEPARTMENT = "PIT";
+      } else if (pageId === "all") {
+        ACTIVE_SEGMENT = null;
+        ACTIVE_DEPARTMENT = null;
+      }
+      
+      // Force table refresh
+      if (pageId !== "dashboard") {
+        searchEl.value = ""; // reset search box
+        updateFilterNote();
+        renderTable("");
+        renderSegments(ALL_ROWS);
+      }
+    }
+  });
+  
+  tl.fromTo(targetDiv,
+    { opacity: 0, y: 15 },
+    { duration: 0.4, opacity: 1, y: 0, ease: "power2.out" }
+  );
+  
+  ACTIVE_PAGE = pageId;
+}
+
 // Event Bindings and Bootstrapping
 function init() {
   // Gate authentication trigger
@@ -853,6 +925,22 @@ function init() {
   logoutBtn.addEventListener("click", logout);
   refreshBtn.addEventListener("click", () => load());
   exportBtn.addEventListener("click", exportCSV);
+
+  // Navigation Links Click Events
+  $$(".nav-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const page = tab.getAttribute("data-page");
+      switchPage(page);
+    });
+  });
+
+  // Dashboard Department Cards Click Events
+  $$(".dept-link-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const targetDept = card.getAttribute("data-target-dept");
+      switchPage(targetDept);
+    });
+  });
 
   // Search Engine input
   searchEl.addEventListener("input", (e) => renderTable(e.target.value));

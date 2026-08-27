@@ -65,168 +65,196 @@
       </div>
     </header>
 
-    <!-- Metrics Stats Grid -->
-    <section class="stats-grid">
-      <div class="stat-card glass-card">
-        <div class="stat-icon-wrapper blue">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Total Registrations</div>
-          <div class="stat-num" id="statTotal">0</div>
-        </div>
+    <!-- Dashboard Sub-Navigation Tabs -->
+    <nav class="dashboard-nav glass-card">
+      <div class="nav-links">
+        <button class="nav-tab active" data-page="dashboard">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Overview</span>
+        </button>
+        <button class="nav-tab" data-page="piet">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>PIET Submissions</span>
+        </button>
+        <button class="nav-tab" data-page="pit">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>PIT Submissions</span>
+        </button>
+        <button class="nav-tab" data-page="all">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>All Registrations</span>
+        </button>
       </div>
-      <div class="stat-card glass-card">
-        <div class="stat-icon-wrapper orange">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Email Sent Progress</div>
-          <div class="stat-num" id="statEmailProgress">0%</div>
-          <div class="stat-sub" id="statEmailRatio">0 / 0 sent</div>
-        </div>
-      </div>
-      <div class="stat-card glass-card">
-        <div class="stat-icon-wrapper purple">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">PIET Submissions</div>
-          <div class="stat-num" id="statPIET">0</div>
-          <div class="stat-sub">Engg. & Tech Institute</div>
-        </div>
-      </div>
-      <div class="stat-card glass-card">
-        <div class="stat-icon-wrapper green">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">PIT & Other Submissions</div>
-          <div class="stat-num" id="statPIT">0</div>
-          <div class="stat-sub">PIT & other faculties</div>
-        </div>
-      </div>
-    </section>
+    </nav>
 
-    <!-- Email Queue Manager & Dispatcher -->
-    <section class="queue-manager glass-card">
-      <div class="queue-header">
-        <div class="queue-title-wrap">
-          <span class="badge badge-amber">Email System</span>
-          <h2>Automated Queue Dispatcher</h2>
-          <p class="queue-desc">Serverless timeout work-around: dispatches verification/acknowledgment emails in batches of 5. Keep this tab open during execution.</p>
+    <!-- Page 1: Overview Dashboard -->
+    <div id="page-dashboard" class="page-view">
+      <!-- Metrics Stats Grid -->
+      <section class="stats-grid">
+        <div class="stat-card glass-card">
+          <div class="stat-icon-wrapper blue">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Registrations</div>
+            <div class="stat-num" id="statTotal">0</div>
+          </div>
         </div>
-        <div class="queue-controls">
-          <div class="queue-status" id="queueStatusText">Ready to dispatch (0 pending)</div>
-          <button id="startDispatchBtn" class="btn btn-primary btn-glow" disabled>
-            <span>Start Dispatch</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          </button>
+        <div class="stat-card glass-card">
+          <div class="stat-icon-wrapper orange">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Email Sent Progress</div>
+            <div class="stat-num" id="statEmailProgress">0%</div>
+            <div class="stat-sub" id="statEmailRatio">0 / 0 sent</div>
+          </div>
         </div>
-      </div>
-      <div class="progress-container">
-        <div class="progress-bar">
-          <div id="queueProgressFill" class="progress-fill" style="width: 0%"></div>
+        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="piet">
+          <div class="stat-icon-wrapper purple">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">PIET Submissions</div>
+            <div class="stat-num" id="statPIET">0</div>
+            <div class="stat-sub">Engg. & Tech Institute ↗</div>
+          </div>
         </div>
-        <div class="progress-stats">
-          <span id="queueProgressPct">0% processed</span>
-          <span id="queueProgressCount">0 / 0 emails sent</span>
+        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="pit">
+          <div class="stat-icon-wrapper green">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">PIT & Other Submissions</div>
+            <div class="stat-num" id="statPIT">0</div>
+            <div class="stat-sub">PIT & other faculties ↗</div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Faculty & Department Breakdown Dashboard Grid -->
-    <section class="faculty-breakdown-grid">
-      <div class="dept-card glass-card">
-        <div class="dept-header">
-          <div class="dept-title-wrap">
-            <span class="dept-icon piet">PI</span>
-            <h3>PIET Department</h3>
+      <!-- Email Queue Manager & Dispatcher -->
+      <section class="queue-manager glass-card">
+        <div class="queue-header">
+          <div class="queue-title-wrap">
+            <span class="badge badge-amber">Email System</span>
+            <h2>Automated Queue Dispatcher</h2>
+            <p class="queue-desc">Serverless timeout work-around: dispatches verification/acknowledgment emails in batches of 5. Keep this tab open during execution.</p>
           </div>
-          <div class="dept-count-badge" id="deptPietCount">0</div>
-        </div>
-        <p class="dept-description">Parul Institute of Engineering & Technology</p>
-        <div class="dept-progress-container">
-          <div class="dept-progress-bar">
-            <div id="deptPietProgress" class="dept-progress-fill piet" style="width: 0%"></div>
+          <div class="queue-controls">
+            <div class="queue-status" id="queueStatusText">Ready to dispatch (0 pending)</div>
+            <button id="startDispatchBtn" class="btn btn-primary btn-glow" disabled>
+              <span>Start Dispatch</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
           </div>
-          <div class="dept-progress-label" id="deptPietPct">0% of total</div>
         </div>
-      </div>
-      
-      <div class="dept-card glass-card">
-        <div class="dept-header">
-          <div class="dept-title-wrap">
-            <span class="dept-icon pit">PT</span>
-            <h3>PIT Department</h3>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div id="queueProgressFill" class="progress-fill" style="width: 0%"></div>
           </div>
-          <div class="dept-count-badge" id="deptPitCount">0</div>
-        </div>
-        <p class="dept-description">Parul Institute of Technology</p>
-        <div class="dept-progress-container">
-          <div class="dept-progress-bar">
-            <div id="deptPitProgress" class="dept-progress-fill pit" style="width: 0%"></div>
+          <div class="progress-stats">
+            <span id="queueProgressPct">0% processed</span>
+            <span id="queueProgressCount">0 / 0 emails sent</span>
           </div>
-          <div class="dept-progress-label" id="deptPitPct">0% of total</div>
         </div>
-      </div>
-      
-      <div class="dept-card glass-card">
-        <div class="dept-header">
-          <div class="dept-title-wrap">
-            <span class="dept-icon other">OT</span>
-            <h3>Other Institutes</h3>
-          </div>
-          <div class="dept-count-badge" id="deptOtherCount">0</div>
-        </div>
-        <p class="dept-description">Other departments and colleges</p>
-        <div class="dept-progress-container">
-          <div class="dept-progress-bar">
-            <div id="deptOtherProgress" class="dept-progress-fill other" style="width: 0%"></div>
-          </div>
-          <div class="dept-progress-label" id="deptOtherPct">0% of total</div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Table Filters and Search Control Bar -->
-    <section class="controls-card glass-card">
-      <div class="controls-row">
-        <div class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input id="search" class="field bare" placeholder="Search name, email, enrollment ID, course, faculty...">
+      <!-- Faculty & Department Breakdown Dashboard Grid -->
+      <section class="faculty-breakdown-grid">
+        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="piet">
+          <div class="dept-header">
+            <div class="dept-title-wrap">
+              <span class="dept-icon piet">PI</span>
+              <h3>PIET Department ↗</h3>
+            </div>
+            <div class="dept-count-badge" id="deptPietCount">0</div>
+          </div>
+          <p class="dept-description">Parul Institute of Engineering & Technology</p>
+          <div class="dept-progress-container">
+            <div class="dept-progress-bar">
+              <div id="deptPietProgress" class="dept-progress-fill piet" style="width: 0%"></div>
+            </div>
+            <div class="dept-progress-label" id="deptPietPct">0% of total</div>
+          </div>
         </div>
-        <div class="control-actions">
-          <button id="refreshBtn" class="btn btn-secondary">
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="spin-hover"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            <span>Refresh</span>
-          </button>
-          <button id="exportBtn" class="btn btn-secondary">
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            <span>Export CSV</span>
-          </button>
+        
+        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="pit">
+          <div class="dept-header">
+            <div class="dept-title-wrap">
+              <span class="dept-icon pit">PT</span>
+              <h3>PIT Department ↗</h3>
+            </div>
+            <div class="dept-count-badge" id="deptPitCount">0</div>
+          </div>
+          <p class="dept-description">Parul Institute of Technology</p>
+          <div class="dept-progress-container">
+            <div class="dept-progress-bar">
+              <div id="deptPitProgress" class="dept-progress-fill pit" style="width: 0%"></div>
+            </div>
+            <div class="dept-progress-label" id="deptPitPct">0% of total</div>
+          </div>
         </div>
-      </div>
-      
-      <!-- Segment Chips Filters -->
-      <div class="chips-container">
-        <span class="chips-label">Quick Filters:</span>
-        <div id="segmentChips" class="chips">
-          <!-- Dynamically inserted segment buttons -->
+        
+        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="all">
+          <div class="dept-header">
+            <div class="dept-title-wrap">
+              <span class="dept-icon other">OT</span>
+              <h3>Other Institutes ↗</h3>
+            </div>
+            <div class="dept-count-badge" id="deptOtherCount">0</div>
+          </div>
+          <p class="dept-description">Other departments and colleges</p>
+          <div class="dept-progress-container">
+            <div class="dept-progress-bar">
+              <div id="deptOtherProgress" class="dept-progress-fill other" style="width: 0%"></div>
+            </div>
+            <div class="dept-progress-label" id="deptOtherPct">0% of total</div>
+          </div>
         </div>
-      </div>
-      <div id="activeFilterNote" class="filter-note hidden"></div>
-    </section>
+      </section>
+    </div>
 
-    <!-- Submissions Table Card -->
-    <section class="table-card glass-card">
-      <div id="tableWrap" class="table-wrap">
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Fetching registrations from Supabase...</p>
+    <!-- Page 2: Detailed Registrations View -->
+    <div id="page-registrations" class="page-view hidden">
+      <!-- Table Filters and Search Control Bar -->
+      <section class="controls-card glass-card">
+        <div class="controls-row">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="search" class="field bare" placeholder="Search name, email, enrollment ID, course, faculty...">
+          </div>
+          <div class="control-actions">
+            <button id="refreshBtn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="spin-hover"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Refresh</span>
+            </button>
+            <button id="exportBtn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
+        
+        <!-- Segment Chips Filters -->
+        <div class="chips-container">
+          <span class="chips-label">Quick Filters:</span>
+          <div id="segmentChips" class="chips">
+            <!-- Dynamically inserted segment chips -->
+          </div>
+        </div>
+        <div id="activeFilterNote" class="filter-note hidden"></div>
+      </section>
+
+      <!-- Submissions Table Card -->
+      <section class="table-card glass-card">
+        <div id="tableWrap" class="table-wrap">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Fetching registrations from Supabase...</p>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <!-- Detail Modal -->
