@@ -478,7 +478,8 @@ function toggleDetailRow(tr, row) {
           <div class="detail-tabs">
             <button class="detail-tab-btn active" data-tab="all">All Fields</button>
             <button class="detail-tab-btn" data-tab="personal">Personal & Academic</button>
-            <button class="detail-tab-btn" data-tab="swift">Developer & Challenge Idea</button>
+            <button class="detail-tab-btn" data-tab="developer">Developer Profile</button>
+            <button class="detail-tab-btn" data-tab="idea">App Idea & Submissions</button>
           </div>
           <div class="detail-body-container">
             <!-- Dynamically populated -->
@@ -500,31 +501,15 @@ function toggleDetailRow(tr, row) {
   function renderInlineData() {
     let html = "";
     
-    if (inlineTab === "swift") {
-      const ideaVal = row.app_playground_idea || row.idea_description || row.playground_idea || "";
+    if (inlineTab === "developer") {
       const experienceVal = row.coding_experience || row.swift_experience || "";
       const commitmentVal = row.commitment || row.hours_per_week || "";
-      
-      // Mac and iPad variables removed
-      
       const github = row.github_profile || "";
       const linkedin = row.linkedin_profile || "";
       const portfolio = row.portfolio_website || "";
       
       html = `
         <div class="inline-data-grid">
-          <div class="idea-showcase span-2">
-            <div class="idea-banner">
-              <div class="idea-badge">
-                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> APP PLAYGROUND IDEA
-              </div>
-              <h3>Proposed Project Description</h3>
-            </div>
-            <div class="idea-text-box">
-              <p>${ideaVal ? esc(ideaVal) : 'The student did not submit or describe their app playground idea in this registration.'}</p>
-            </div>
-          </div>
-          
           <div class="idea-meta-card">
             <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Coding Experience</span>
             <div class="experience-badge">${experienceVal ? esc(experienceVal) : 'Not specified'}</div>
@@ -534,8 +519,6 @@ function toggleDetailRow(tr, row) {
             <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Commitment Details</span>
             <div class="commitment-info">${commitmentVal ? esc(commitmentVal) : 'Not specified'}</div>
           </div>
-          
-          <!-- Device access section removed -->
 
           <div class="links-panel span-2">
             <h4 class="section-subtitle">Developer Portfolio & Links</h4>
@@ -560,6 +543,31 @@ function toggleDetailRow(tr, row) {
               ` : ''}
               ${!github && !linkedin && !portfolio ? '<div style="color:var(--text-muted);font-size:13.5px;font-style:italic;padding:10px 0;">No portfolio or profile links provided.</div>' : ''}
             </div>
+          </div>
+        </div>
+      `;
+    } else if (inlineTab === "idea") {
+      const ideaVal = row.app_playground_idea || row.idea_description || row.playground_idea || "";
+      const previousComp = row.previous_competitions ? "Yes (Prior experience in competitions)" : "No (First-time participant)";
+      const compDetails = row.competition_details || "";
+
+      html = `
+        <div class="inline-data-grid">
+          <div class="idea-showcase span-2">
+            <div class="idea-banner">
+              <div class="idea-badge">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> APP PLAYGROUND IDEA
+              </div>
+              <h3>Proposed Project Description & Idea</h3>
+            </div>
+            <div class="idea-text-box">
+              <p>${ideaVal ? esc(ideaVal) : 'The student did not submit or describe their app playground idea in this registration.'}</p>
+            </div>
+          </div>
+          
+          <div class="idea-meta-card span-2">
+            <span class="modal-label">Previous Competitions / Hackathons</span>
+            <div class="commitment-info" style="font-weight:600;">${esc(previousComp)} ${compDetails ? ` — ${esc(compDetails)}` : ''}</div>
           </div>
         </div>
       `;
