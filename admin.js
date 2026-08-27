@@ -129,8 +129,11 @@ async function tryUnlock() {
   }
 
   try {
-    const success = await verifyKey(passcode);
-    if (success) {
+    const r = await fetch("/api/entries", {
+      headers: { "x-admin-key": passcode }
+    });
+    
+    if (r.status === 200) {
       sessionStorage.setItem(KEY_STORE, passcode);
       
       // Premium GSAP Out/In Transition
@@ -155,7 +158,12 @@ async function tryUnlock() {
       
       load();
     } else {
-      gateErr.textContent = "Access denied. Invalid passcode.";
+      const data = await r.json().catch(() => ({}));
+      if (r.status === 401) {
+        gateErr.textContent = "Access denied. Invalid passcode.";
+      } else {
+        gateErr.textContent = `Database Error (${r.status}): ${data.error || "Unknown server response"}`;
+      }
       gsap.fromTo(".gate-card", 
         { x: -10 },
         { duration: 0.4, x: 0, ease: "rough({strength: 2, points: 8, template: linear})" }
@@ -163,17 +171,6 @@ async function tryUnlock() {
     }
   } catch (e) {
     gateErr.textContent = "Connection failed: " + e.message;
-  }
-}
-
-async function verifyKey(key) {
-  try {
-    const r = await fetch("/api/entries", {
-      headers: { "x-admin-key": key }
-    });
-    return r.status === 200;
-  } catch {
-    return false;
   }
 }
 
