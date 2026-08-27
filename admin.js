@@ -21,8 +21,8 @@ const searchEl = $("#search");
 const statTotal = $("#statTotal");
 const statEmailProgress = $("#statEmailProgress");
 const statEmailRatio = $("#statEmailRatio");
-const statPIET = $("#statPIET");
-const statPIT = $("#statPIT");
+const statUniMail = $("#statUniMail");
+const statPersonalMail = $("#statPersonalMail");
 
 const startDispatchBtn = $("#startDispatchBtn");
 const queueStatusText = $("#queueStatusText");
@@ -256,24 +256,20 @@ function calculateMetrics(rows) {
     }
   }
 
-  // 2. PIET & PIT metrics
-  let pietCount = 0;
-  let pitCount = 0;
-  let otherCount = 0;
+  // 2. University vs Personal email metrics
+  let uniMailCount = 0;
+  let personalMailCount = 0;
   
   rows.forEach(r => {
-    const fac = String(r.faculty_institute || "").trim().toUpperCase();
-    if (fac.includes("PIET")) {
-      pietCount++;
-    } else if (fac.includes("PIT")) {
-      pitCount++;
+    if (r.has_uni_email) {
+      uniMailCount++;
     } else {
-      otherCount++;
+      personalMailCount++;
     }
   });
 
-  if (statPIET) statPIET.textContent = pietCount;
-  if (statPIT) statPIT.textContent = `${pitCount} PIT / ${otherCount} other`;
+  if (statUniMail) statUniMail.textContent = uniMailCount;
+  if (statPersonalMail) statPersonalMail.textContent = personalMailCount;
 
   // 4. Render Segments Filters
   renderSegments(rows);
@@ -346,11 +342,9 @@ function renderTable(query) {
 
   if (ACTIVE_DEPARTMENT) {
     rows = rows.filter((r) => {
-      const fac = String(r.faculty_institute || "").trim().toUpperCase();
-      if (ACTIVE_DEPARTMENT === "PIET") return fac.includes("PIET");
-      if (ACTIVE_DEPARTMENT === "PIT") return fac.includes("PIT");
-      // For other, exclude both PIET and PIT
-      return !fac.includes("PIET") && !fac.includes("PIT");
+      if (ACTIVE_DEPARTMENT === "uni-mail") return r.has_uni_email === true;
+      if (ACTIVE_DEPARTMENT === "personal-mail") return r.has_uni_email === false;
+      return true;
     });
   }
 
@@ -630,25 +624,21 @@ function toggleDetailRow(tr, row) {
 // Calculate and update the Faculty & Department breakdown cards
 function updateFacultyBreakdown(rows) {
   const total = rows.length;
-  let pietCount = 0;
-  let pitCount = 0;
-  let otherCount = 0;
+  let uniCount = 0;
+  let personalCount = 0;
   
   rows.forEach(r => {
-    const fac = String(r.faculty_institute || "").trim().toUpperCase();
-    if (fac.includes("PIET")) {
-      pietCount++;
-    } else if (fac.includes("PIT")) {
-      pitCount++;
+    if (r.has_uni_email) {
+      uniCount++;
     } else {
-      otherCount++;
+      personalCount++;
     }
   });
   
   // Calculate percentages
-  const pietPct = total ? Math.round((pietCount / total) * 100) : 0;
-  const pitPct = total ? Math.round((pitCount / total) * 100) : 0;
-  const otherPct = total ? Math.round((otherCount / total) * 100) : 0;
+  const uniPct = total ? Math.round((uniCount / total) * 100) : 0;
+  const personalPct = total ? Math.round((personalCount / total) * 100) : 0;
+  const allPct = 100;
   
   // Update HTML elements
   const deptPietCount = $("#deptPietCount");
@@ -663,17 +653,17 @@ function updateFacultyBreakdown(rows) {
   const deptOtherProgress = $("#deptOtherProgress");
   const deptOtherPct = $("#deptOtherPct");
   
-  if (deptPietCount) deptPietCount.textContent = pietCount;
-  if (deptPietProgress) deptPietProgress.style.width = `${pietPct}%`;
-  if (deptPietPct) deptPietPct.textContent = `${pietPct}% of total registrations`;
+  if (deptPietCount) deptPietCount.textContent = uniCount;
+  if (deptPietProgress) deptPietProgress.style.width = `${uniPct}%`;
+  if (deptPietPct) deptPietPct.textContent = `${uniPct}% of total registrations`;
   
-  if (deptPitCount) deptPitCount.textContent = pitCount;
-  if (deptPitProgress) deptPitProgress.style.width = `${pitPct}%`;
-  if (deptPitPct) deptPitPct.textContent = `${pitPct}% of total registrations`;
+  if (deptPitCount) deptPitCount.textContent = personalCount;
+  if (deptPitProgress) deptPitProgress.style.width = `${personalPct}%`;
+  if (deptPitPct) deptPitPct.textContent = `${personalPct}% of total registrations`;
   
-  if (deptOtherCount) deptOtherCount.textContent = otherCount;
-  if (deptOtherProgress) deptOtherProgress.style.width = `${otherPct}%`;
-  if (deptOtherPct) deptOtherPct.textContent = `${otherPct}% of total registrations`;
+  if (deptOtherCount) deptOtherCount.textContent = total;
+  if (deptOtherProgress) deptOtherProgress.style.width = `${allPct}%`;
+  if (deptOtherPct) deptOtherPct.textContent = `${total} entries combined`;
 }
 
 // Automated Batch Email Dispatch Loop
@@ -884,12 +874,12 @@ function switchPage(pageId) {
       targetDiv.classList.remove("hidden");
       
       // Update department state filters
-      if (pageId === "piet") {
+      if (pageId === "uni-mail") {
         ACTIVE_SEGMENT = null;
-        ACTIVE_DEPARTMENT = "PIET";
-      } else if (pageId === "pit") {
+        ACTIVE_DEPARTMENT = "uni-mail";
+      } else if (pageId === "personal-mail") {
         ACTIVE_SEGMENT = null;
-        ACTIVE_DEPARTMENT = "PIT";
+        ACTIVE_DEPARTMENT = "personal-mail";
       } else if (pageId === "all") {
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = null;

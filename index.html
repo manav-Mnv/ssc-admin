@@ -72,13 +72,13 @@
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span>Overview</span>
         </button>
-        <button class="nav-tab" data-page="piet">
+        <button class="nav-tab" data-page="uni-mail">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-          <span>PIET Submissions</span>
+          <span>University Mail</span>
         </button>
-        <button class="nav-tab" data-page="pit">
+        <button class="nav-tab" data-page="personal-mail">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-          <span>PIT Submissions</span>
+          <span>Personal Mail</span>
         </button>
         <button class="nav-tab" data-page="all">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
@@ -110,24 +110,24 @@
             <div class="stat-sub" id="statEmailRatio">0 / 0 sent</div>
           </div>
         </div>
-        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="piet">
+        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="uni-mail">
           <div class="stat-icon-wrapper purple">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
           </div>
           <div class="stat-content">
-            <div class="stat-label">PIET Submissions</div>
-            <div class="stat-num" id="statPIET">0</div>
-            <div class="stat-sub">Engg. & Tech Institute ↗</div>
+            <div class="stat-label">University Mail</div>
+            <div class="stat-num" id="statUniMail">0</div>
+            <div class="stat-sub">Official @paruluniversity.ac.in ↗</div>
           </div>
         </div>
-        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="pit">
+        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="personal-mail">
           <div class="stat-icon-wrapper green">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
           </div>
           <div class="stat-content">
-            <div class="stat-label">PIT & Other Submissions</div>
-            <div class="stat-num" id="statPIT">0</div>
-            <div class="stat-sub">PIT & other faculties ↗</div>
+            <div class="stat-label">Personal Mail</div>
+            <div class="stat-num" id="statPersonalMail">0</div>
+            <div class="stat-sub">Gmail, Yahoo & others ↗</div>
           </div>
         </div>
       </section>
@@ -161,15 +161,15 @@
 
       <!-- Faculty & Department Breakdown Dashboard Grid -->
       <section class="faculty-breakdown-grid">
-        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="piet">
+        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="uni-mail">
           <div class="dept-header">
             <div class="dept-title-wrap">
-              <span class="dept-icon piet">PI</span>
-              <h3>PIET Department ↗</h3>
+              <span class="dept-icon piet">UN</span>
+              <h3>University Mail Submissions ↗</h3>
             </div>
             <div class="dept-count-badge" id="deptPietCount">0</div>
           </div>
-          <p class="dept-description">Parul Institute of Engineering & Technology</p>
+          <p class="dept-description">Official Parul University email registrations</p>
           <div class="dept-progress-container">
             <div class="dept-progress-bar">
               <div id="deptPietProgress" class="dept-progress-fill piet" style="width: 0%"></div>
@@ -178,15 +178,15 @@
           </div>
         </div>
         
-        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="pit">
+        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="personal-mail">
           <div class="dept-header">
             <div class="dept-title-wrap">
-              <span class="dept-icon pit">PT</span>
-              <h3>PIT Department ↗</h3>
+              <span class="dept-icon pit">PR</span>
+              <h3>Personal Mail Submissions ↗</h3>
             </div>
             <div class="dept-count-badge" id="deptPitCount">0</div>
           </div>
-          <p class="dept-description">Parul Institute of Technology</p>
+          <p class="dept-description">Personal email registrations (Gmail, Yahoo, etc.)</p>
           <div class="dept-progress-container">
             <div class="dept-progress-bar">
               <div id="deptPitProgress" class="dept-progress-fill pit" style="width: 0%"></div>
@@ -198,12 +198,12 @@
         <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="all">
           <div class="dept-header">
             <div class="dept-title-wrap">
-              <span class="dept-icon other">OT</span>
-              <h3>Other Institutes ↗</h3>
+              <span class="dept-icon other">AL</span>
+              <h3>Total Registered Submissions ↗</h3>
             </div>
             <div class="dept-count-badge" id="deptOtherCount">0</div>
           </div>
-          <p class="dept-description">Other departments and colleges</p>
+          <p class="dept-description">Combined student registrations dashboard</p>
           <div class="dept-progress-container">
             <div class="dept-progress-bar">
               <div id="deptOtherProgress" class="dept-progress-fill other" style="width: 0%"></div>
