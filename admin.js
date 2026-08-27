@@ -469,7 +469,7 @@ function renderTable(query) {
       tr.addEventListener("click", () => {
         const id = tr.getAttribute("data-id");
         const row = ALL_ROWS.find(r => String(r.id || (ALL_ROWS.indexOf(r) + 1)) === id);
-        if (row) openDetailModal(row);
+        if (row) toggleDetailRow(tr, row);
       });
     });
 
@@ -480,159 +480,203 @@ function renderTable(query) {
   }});
 }
 
-// Dynamic Detail Modal System
-function openDetailModal(row) {
-  activeRowData = row;
-  modalStudentName.textContent = row.full_name || "Student Details";
-  modalStudentEmail.textContent = row.email || "student@email.com";
-  
-  detailModal.classList.remove("hidden");
-  
-  // Animate modal open
-  gsap.fromTo(".modal-card",
-    { scale: 0.95, opacity: 0, y: 20 },
-    { duration: 0.35, scale: 1, opacity: 1, y: 0, ease: "power3.out" }
-  );
-  
-  renderModalData();
-}
-
-function closeDetailModal() {
-  gsap.to(".modal-card", {
-    duration: 0.25,
-    scale: 0.95,
-    opacity: 0,
-    y: 20,
-    ease: "power2.in",
-    onComplete: () => {
-      detailModal.classList.add("hidden");
-      activeRowData = null;
-    }
-  });
-}
-
-function renderModalData() {
-  if (!activeRowData) return;
-  
-  let html = "";
-  
-  // Custom Breathtaking Showcase Layout for the Developer & Challenge Idea Tab
-  if (currentTab === "swift") {
-    const ideaVal = activeRowData.app_playground_idea || activeRowData.idea_description || activeRowData.playground_idea || "";
-    const experienceVal = activeRowData.coding_experience || activeRowData.swift_experience || "";
-    const commitmentVal = activeRowData.commitment || activeRowData.hours_per_week || "";
-    
-    const hasMac = activeRowData.mac_user === true || String(activeRowData.mac_user).toLowerCase() === "true" || String(activeRowData.has_mac).toLowerCase() === "true" || String(activeRowData.do_you_have_mac).toLowerCase().includes("yes");
-    const hasIpad = activeRowData.ipad_user === true || String(activeRowData.ipad_user).toLowerCase() === "true" || String(activeRowData.has_ipad).toLowerCase() === "true" || String(activeRowData.do_you_have_ipad).toLowerCase().includes("yes");
-    
-    const github = activeRowData.github_profile || "";
-    const linkedin = activeRowData.linkedin_profile || "";
-    const portfolio = activeRowData.portfolio_website || "";
-    
-    html = `
-      <div class="idea-showcase span-2">
-        <div class="idea-banner">
-          <div class="idea-badge">
-            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> APP PLAYGROUND IDEA
-          </div>
-          <h3>Proposed Project Description</h3>
-        </div>
-        <div class="idea-text-box">
-          <p>${ideaVal ? esc(ideaVal) : 'The student did not submit or describe their app playground idea in this registration.'}</p>
-        </div>
-      </div>
-      
-      <div class="idea-meta-card">
-        <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Coding Experience</span>
-        <div class="experience-badge">${experienceVal ? esc(experienceVal) : 'Not specified'}</div>
-      </div>
-      
-      <div class="idea-meta-card">
-        <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Commitment Details</span>
-        <div class="commitment-info">${commitmentVal ? esc(commitmentVal) : 'Not specified'}</div>
-      </div>
-      
-      <div class="devices-panel span-2">
-        <h4 class="section-subtitle">Device Access Profile</h4>
-        <div class="devices-row">
-          <div class="device-pill ${hasMac ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            <span>Mac OS Access: ${hasMac ? 'Yes / Available' : 'No / Not Available'}</span>
-          </div>
-          <div class="device-pill ${hasIpad ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18"></line></svg>
-            <span>iPad OS Access: ${hasIpad ? 'Yes / Available' : 'No / Not Available'}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="links-panel span-2">
-        <h4 class="section-subtitle">Developer Portfolio & Links</h4>
-        <div class="links-grid">
-          ${github ? `
-            <a href="${esc(github)}" target="_blank" rel="noopener noreferrer" class="link-card github">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-              <span>GitHub Profile ↗</span>
-            </a>
-          ` : ''}
-          ${linkedin ? `
-            <a href="${esc(linkedin)}" target="_blank" rel="noopener noreferrer" class="link-card linkedin">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-              <span>LinkedIn Profile ↗</span>
-            </a>
-          ` : ''}
-          ${portfolio ? `
-            <a href="${esc(portfolio)}" target="_blank" rel="noopener noreferrer" class="link-card portfolio">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <span>Portfolio Website ↗</span>
-            </a>
-          ` : ''}
-          ${!github && !linkedin && !portfolio ? '<div style="color:var(--text-muted);font-size:13.5px;font-style:italic;padding:10px 0;">No portfolio or profile links provided.</div>' : ''}
-        </div>
-      </div>
-    `;
-  } else {
-    // Standard layout for other tabs
-    const keys = Object.keys(activeRowData);
-    keys.forEach((key) => {
-      if (key === "id") return;
-      if (currentTab === "personal" && !CATEGORIES.personal.includes(key)) return;
-      
-      const value = activeRowData[key];
-      let displayVal = "";
-      
-      if (value === null || value === undefined || value === "") {
-        displayVal = `<span class="empty">N/A (Not Provided)</span>`;
-      } else if (typeof value === "boolean") {
-        const isTrue = value === true;
-        displayVal = `<span class="status-indicator ${isTrue ? 'sent' : 'unsent'}"><span class="status-dot"></span><span>${isTrue ? 'Yes / True' : 'No / False'}</span></span>`;
-      } else {
-        const valStr = String(value);
-        if (valStr.startsWith("http://") || valStr.startsWith("https://")) {
-          displayVal = `<a href="${esc(valStr)}" target="_blank" rel="noopener noreferrer">${esc(valStr)} ↗</a>`;
-        } else {
-          displayVal = esc(valStr);
-        }
+// Dynamic Collapsible Detail Row System (Inline Expansion)
+function toggleDetailRow(tr, row) {
+  const existing = tr.nextElementSibling;
+  if (existing && existing.classList.contains("detail-row")) {
+    const wrapper = existing.querySelector(".detail-content-wrapper");
+    // Close with GSAP
+    gsap.to(wrapper, {
+      duration: 0.3,
+      height: 0,
+      opacity: 0,
+      ease: "power2.in",
+      onComplete: () => {
+        existing.remove();
+        tr.classList.remove("open");
       }
+    });
+    return;
+  }
+  
+  // Close any other open detail rows (accordion style)
+  $$("tr.detail-row").forEach((openRow) => {
+    const prev = openRow.previousElementSibling;
+    if (prev) {
+      prev.classList.remove("open");
+    }
+    openRow.remove();
+  });
+  
+  const detailRow = document.createElement("tr");
+  detailRow.className = "detail-row";
+  
+  detailRow.innerHTML = `
+    <td colspan="9">
+      <div class="detail-content-wrapper" style="height: 0; opacity: 0;">
+        <div class="detail-inner glass-card">
+          <div class="detail-tabs">
+            <button class="detail-tab-btn active" data-tab="all">All Fields</button>
+            <button class="detail-tab-btn" data-tab="personal">Personal & Academic</button>
+            <button class="detail-tab-btn" data-tab="swift">Developer & Challenge Idea</button>
+          </div>
+          <div class="detail-body-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </td>
+  `;
+  
+  tr.parentNode.insertBefore(detailRow, tr.nextSibling);
+  tr.classList.add("open");
+  
+  const wrapper = detailRow.querySelector(".detail-content-wrapper");
+  const container = detailRow.querySelector(".detail-body-container");
+  const tabBtns = detailRow.querySelectorAll(".detail-tab-btn");
+  
+  let inlineTab = "all";
+  
+  function renderInlineData() {
+    let html = "";
+    
+    if (inlineTab === "swift") {
+      const ideaVal = row.app_playground_idea || row.idea_description || row.playground_idea || "";
+      const experienceVal = row.coding_experience || row.swift_experience || "";
+      const commitmentVal = row.commitment || row.hours_per_week || "";
       
-      const isLongText = key.toLowerCase().includes('idea') || key.toLowerCase().includes('description') || key.toLowerCase().includes('experience') || key.toLowerCase().includes('detail') || key.toLowerCase().includes('reason');
-      const spanClass = isLongText ? "modal-item span-2" : "modal-item";
-      const prettyLabel = key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      const hasMac = row.mac_user === true || String(row.mac_user).toLowerCase() === "true" || String(row.has_mac).toLowerCase() === "true" || String(row.do_you_have_mac).toLowerCase().includes("yes");
+      const hasIpad = row.ipad_user === true || String(row.ipad_user).toLowerCase() === "true" || String(row.has_ipad).toLowerCase() === "true" || String(row.do_you_have_ipad).toLowerCase().includes("yes");
       
-      html += `
-        <div class="${spanClass}">
-          <span class="modal-label">${esc(prettyLabel)}</span>
-          <div class="modal-value">${displayVal}</div>
+      const github = row.github_profile || "";
+      const linkedin = row.linkedin_profile || "";
+      const portfolio = row.portfolio_website || "";
+      
+      html = `
+        <div class="inline-data-grid">
+          <div class="idea-showcase span-2">
+            <div class="idea-banner">
+              <div class="idea-badge">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> APP PLAYGROUND IDEA
+              </div>
+              <h3>Proposed Project Description</h3>
+            </div>
+            <div class="idea-text-box">
+              <p>${ideaVal ? esc(ideaVal) : 'The student did not submit or describe their app playground idea in this registration.'}</p>
+            </div>
+          </div>
+          
+          <div class="idea-meta-card">
+            <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Coding Experience</span>
+            <div class="experience-badge">${experienceVal ? esc(experienceVal) : 'Not specified'}</div>
+          </div>
+          
+          <div class="idea-meta-card">
+            <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Commitment Details</span>
+            <div class="commitment-info">${commitmentVal ? esc(commitmentVal) : 'Not specified'}</div>
+          </div>
+          
+          <div class="devices-panel span-2">
+            <h4 class="section-subtitle">Device Access Profile</h4>
+            <div class="devices-row">
+              <div class="device-pill ${hasMac ? 'active' : ''}">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                <span>Mac OS Access: ${hasMac ? 'Yes / Available' : 'No / Not Available'}</span>
+              </div>
+              <div class="device-pill ${hasIpad ? 'active' : ''}">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18"></line></svg>
+                <span>iPad OS Access: ${hasIpad ? 'Yes / Available' : 'No / Not Available'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="links-panel span-2">
+            <h4 class="section-subtitle">Developer Portfolio & Links</h4>
+            <div class="links-grid">
+              ${github ? `
+                <a href="${esc(github)}" target="_blank" rel="noopener noreferrer" class="link-card github">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                  <span>GitHub Profile ↗</span>
+                </a>
+              ` : ''}
+              ${linkedin ? `
+                <a href="${esc(linkedin)}" target="_blank" rel="noopener noreferrer" class="link-card linkedin">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                  <span>LinkedIn Profile ↗</span>
+                </a>
+              ` : ''}
+              ${portfolio ? `
+                <a href="${esc(portfolio)}" target="_blank" rel="noopener noreferrer" class="link-card portfolio">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                  <span>Portfolio Website ↗</span>
+                </a>
+              ` : ''}
+              ${!github && !linkedin && !portfolio ? '<div style="color:var(--text-muted);font-size:13.5px;font-style:italic;padding:10px 0;">No portfolio or profile links provided.</div>' : ''}
+            </div>
+          </div>
         </div>
       `;
+    } else {
+      const keys = Object.keys(row);
+      let itemsHtml = "";
+      keys.forEach((key) => {
+        if (key === "id") return;
+        if (inlineTab === "personal" && !CATEGORIES.personal.includes(key)) return;
+        
+        const value = row[key];
+        let displayVal = "";
+        
+        if (value === null || value === undefined || value === "") {
+          displayVal = `<span class="empty">N/A (Not Provided)</span>`;
+        } else if (typeof value === "boolean") {
+          const isTrue = value === true;
+          displayVal = `<span class="status-indicator ${isTrue ? 'sent' : 'unsent'}"><span class="status-dot"></span><span>${isTrue ? 'Yes / True' : 'No / False'}</span></span>`;
+        } else {
+          const valStr = String(value);
+          if (valStr.startsWith("http://") || valStr.startsWith("https://")) {
+            displayVal = `<a href="${esc(valStr)}" target="_blank" rel="noopener noreferrer">${esc(valStr)} ↗</a>`;
+          } else {
+            displayVal = esc(valStr);
+          }
+        }
+        
+        const isLongText = key.toLowerCase().includes('idea') || key.toLowerCase().includes('description') || key.toLowerCase().includes('experience') || key.toLowerCase().includes('detail') || key.toLowerCase().includes('reason');
+        const spanClass = isLongText ? "modal-item span-2" : "modal-item";
+        const prettyLabel = key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        
+        itemsHtml += `
+          <div class="${spanClass}">
+            <span class="modal-label">${esc(prettyLabel)}</span>
+            <div class="modal-value">${displayVal}</div>
+          </div>
+        `;
+      });
+      
+      html = `<div class="inline-data-grid">${itemsHtml}</div>`;
+    }
+    container.innerHTML = html;
+  }
+  
+  renderInlineData();
+  
+  // Animate Open
+  gsap.to(wrapper, {
+    duration: 0.4,
+    height: "auto",
+    opacity: 1,
+    ease: "power2.out"
+  });
+  
+  // Set up click handlers for tabs
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent closing row
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      inlineTab = btn.getAttribute("data-tab");
+      renderInlineData();
     });
-  }
-  
-  if (!html) {
-    html = `<div class="modal-item span-2" style="text-align:center;padding:40px;color:var(--text-muted);">No fields match this tab category.</div>`;
-  }
-  
-  modalDataContainer.innerHTML = html;
+  });
 }
 
 // Chart.js Graphs Rendering
@@ -967,21 +1011,7 @@ function init() {
   // Email Queue dispatch trigger
   startDispatchBtn.addEventListener("click", startDispatch);
 
-  // Modal actions
-  modalCloseBtn.addEventListener("click", closeDetailModal);
-  detailModal.addEventListener("click", (e) => {
-    if (e.target === detailModal) closeDetailModal();
-  });
-
-  // Modal Tabs switching
-  modalTabBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      modalTabBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentTab = btn.getAttribute("data-tab");
-      renderModalData();
-    });
-  });
+  // Modal actions (Disabled, using inline collapsible rows)
 
   // Check sessionStorage on page mount
   const activeKey = getKey();
