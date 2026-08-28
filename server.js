@@ -4,6 +4,7 @@ const path = require("path");
 
 const entriesHandler = require("./api/entries");
 const sendEmailsHandler = require("./api/send-emails");
+const deleteAllHandler = require("./api/delete-all");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,8 @@ app.use(express.static(path.join(__dirname, "./")));
 // API Routes
 app.get("/api/entries", (req, res) => entriesHandler(req, res));
 app.post("/api/send-emails", (req, res) => sendEmailsHandler(req, res));
+app.delete("/api/delete-all", (req, res) => deleteAllHandler(req, res));
+
 
 // Fallback to index.html
 app.use((req, res) => {

@@ -953,6 +953,104 @@ function exportCSV() {
   document.body.removeChild(link);
 }
 
+// ───────────────────────────────────────────────────────────────
+// Backup JSON
+// ───────────────────────────────────────────────────────────────
+function backupJSON() {
+  if (ALL_ROWS.length === 0) {
+    alert("No data to back up.");
+    return;
+  }
+  const payload = {
+    exported_at: new Date().toISOString(),
+    total_records: ALL_ROWS.length,
+    records: ALL_ROWS,
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const timestamp = new Date().toISOString().slice(0, 10);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `SSC2027_Backup_${timestamp}.json`);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// ───────────────────────────────────────────────────────────────
+// Delete All Data — with type-DELETE confirmation gate
+// ───────────────────────────────────────────────────────────────
+function showDeleteModal() {
+  const modal = $("#deleteModal");
+  const input = $("#deleteConfirmInput");
+  const confirmBtn = $("#deleteConfirmBtn");
+  const errorEl = $("#deleteConfirmError");
+
+  // Reset state
+  input.value = "";
+  confirmBtn.disabled = true;
+  confirmBtn.style.opacity = "0.5";
+  confirmBtn.style.cursor = "not-allowed";
+  errorEl.style.display = "none";
+
+  modal.classList.remove("hidden");
+  gsap.fromTo(modal.querySelector(".modal-card"),
+    { scale: 0.92, opacity: 0, y: 20 },
+    { duration: 0.3, scale: 1, opacity: 1, y: 0, ease: "power3.out" }
+  );
+  setTimeout(() => input.focus(), 320);
+}
+
+function closeDeleteModal() {
+  const modal = $("#deleteModal");
+  gsap.to(modal.querySelector(".modal-card"), {
+    duration: 0.2, scale: 0.92, opacity: 0, y: 10, ease: "power2.in",
+    onComplete: () => modal.classList.add("hidden")
+  });
+}
+
+async function confirmDeleteAll() {
+  const confirmBtn = $("#deleteConfirmBtn");
+  const originalHTML = confirmBtn.innerHTML;
+
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg class="spin" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Deleting...</span>`;
+
+  try {
+    const r = await fetch("/api/delete-all", {
+      method: "DELETE",
+      headers: { "x-admin-key": getKey() }
+    });
+    const data = await r.json();
+
+    if (!r.ok) throw new Error(data.error || "Server error");
+
+    closeDeleteModal();
+    ALL_ROWS = [];
+    renderTable("");
+    calculateMetrics([]);
+    updateFacultyBreakdown([]);
+    countEl.textContent = 0;
+
+    // Success toast
+    const toast = document.createElement("div");
+    toast.style.cssText = "position:fixed;bottom:28px;right:28px;background:#ef4444;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(239,68,68,0.4);";
+    toast.textContent = `✔ All registrations deleted successfully.`;
+    document.body.appendChild(toast);
+    gsap.fromTo(toast, { opacity: 0, y: 20 }, { duration: 0.3, opacity: 1, y: 0 });
+    setTimeout(() => gsap.to(toast, { duration: 0.3, opacity: 0, y: 10, onComplete: () => toast.remove() }), 3500);
+
+  } catch (err) {
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = originalHTML;
+    $("#deleteConfirmError").textContent = "Error: " + err.message;
+    $("#deleteConfirmError").style.display = "block";
+  }
+}
+
 // Helper Utilities
 function fmtDate(dateVal) {
   if (!dateVal) return "N/A";
@@ -1056,6 +1154,40 @@ function init() {
   logoutBtn.addEventListener("click", logout);
   refreshBtn.addEventListener("click", () => load());
   exportBtn.addEventListener("click", exportCSV);
+
+  // Backup JSON button
+  const backupBtn = $("#backupBtn");
+  if (backupBtn) backupBtn.addEventListener("click", backupJSON);
+
+  // Delete All button + modal wiring
+  const deleteAllBtn = $("#deleteAllBtn");
+  if (deleteAllBtn) deleteAllBtn.addEventListener("click", showDeleteModal);
+
+  const deleteCancelBtn = $("#deleteCancelBtn");
+  if (deleteCancelBtn) deleteCancelBtn.addEventListener("click", closeDeleteModal);
+
+  const deleteConfirmBtn = $("#deleteConfirmBtn");
+  const deleteConfirmInput = $("#deleteConfirmInput");
+  if (deleteConfirmInput) {
+    deleteConfirmInput.addEventListener("input", () => {
+      const isMatch = deleteConfirmInput.value.trim() === "DELETE";
+      deleteConfirmBtn.disabled = !isMatch;
+      deleteConfirmBtn.style.opacity = isMatch ? "1" : "0.5";
+      deleteConfirmBtn.style.cursor = isMatch ? "pointer" : "not-allowed";
+      $("#deleteConfirmError").style.display = "none";
+    });
+    deleteConfirmInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !deleteConfirmBtn.disabled) confirmDeleteAll();
+      if (e.key === "Escape") closeDeleteModal();
+    });
+  }
+  if (deleteConfirmBtn) deleteConfirmBtn.addEventListener("click", confirmDeleteAll);
+
+  // Close delete modal on overlay click
+  $("#deleteModal").addEventListener("click", (e) => {
+    if (e.target === $("#deleteModal")) closeDeleteModal();
+  });
+
 
   // Navigation Links Click Events
   $$(".nav-tab").forEach((tab) => {
