@@ -986,15 +986,25 @@ function backupJSON() {
 function showDeleteModal() {
   const modal = $("#deleteModal");
   const input = $("#deleteConfirmInput");
+  const pwInput = $("#deletePasswordInput");
   const confirmBtn = $("#deleteConfirmBtn");
   const errorEl = $("#deleteConfirmError");
+  const step2 = $("#deleteStep2");
+  const stepLine = $("#deleteStepLine");
+  const step2Dot = $("#deleteStep2Dot");
 
-  // Reset state
+  // Reset to Step 1
   input.value = "";
+  if (pwInput) pwInput.value = "";
   confirmBtn.disabled = true;
   confirmBtn.style.opacity = "0.5";
   confirmBtn.style.cursor = "not-allowed";
   errorEl.style.display = "none";
+  step2.style.display = "none";
+  stepLine.style.width = "0%";
+  step2Dot.style.background = "rgba(239,68,68,0.15)";
+  step2Dot.style.border = "2px solid rgba(239,68,68,0.3)";
+  step2Dot.style.color = "#ef4444";
 
   modal.classList.remove("hidden");
   gsap.fromTo(modal.querySelector(".modal-card"),
@@ -1159,7 +1169,7 @@ function init() {
   const backupBtn = $("#backupBtn");
   if (backupBtn) backupBtn.addEventListener("click", backupJSON);
 
-  // Delete All button + modal wiring
+  // Delete All button + 2-step modal wiring
   const deleteAllBtn = $("#deleteAllBtn");
   if (deleteAllBtn) deleteAllBtn.addEventListener("click", showDeleteModal);
 
@@ -1168,19 +1178,64 @@ function init() {
 
   const deleteConfirmBtn = $("#deleteConfirmBtn");
   const deleteConfirmInput = $("#deleteConfirmInput");
+  const deletePasswordInput = $("#deletePasswordInput");
+  const deleteStep2 = $("#deleteStep2");
+  const deleteStepLine = $("#deleteStepLine");
+  const deleteStep2Dot = $("#deleteStep2Dot");
+
+  // Step 1 — typing DELETE reveals Step 2
   if (deleteConfirmInput) {
     deleteConfirmInput.addEventListener("input", () => {
-      const isMatch = deleteConfirmInput.value.trim() === "DELETE";
-      deleteConfirmBtn.disabled = !isMatch;
-      deleteConfirmBtn.style.opacity = isMatch ? "1" : "0.5";
-      deleteConfirmBtn.style.cursor = isMatch ? "pointer" : "not-allowed";
+      const isDeleteTyped = deleteConfirmInput.value.trim() === "DELETE";
       $("#deleteConfirmError").style.display = "none";
+
+      if (isDeleteTyped) {
+        // Animate progress bar to 100% and reveal Step 2
+        deleteStepLine.style.width = "100%";
+        deleteStep2Dot.style.background = "#ef4444";
+        deleteStep2Dot.style.border = "none";
+        deleteStep2Dot.style.color = "#fff";
+        deleteStep2.style.display = "block";
+        gsap.fromTo(deleteStep2,
+          { opacity: 0, y: 8 },
+          { duration: 0.3, opacity: 1, y: 0, ease: "power2.out",
+            onComplete: () => { if (deletePasswordInput) deletePasswordInput.focus(); }
+          }
+        );
+      } else {
+        deleteStepLine.style.width = "0%";
+        deleteStep2Dot.style.background = "rgba(239,68,68,0.15)";
+        deleteStep2Dot.style.border = "2px solid rgba(239,68,68,0.3)";
+        deleteStep2Dot.style.color = "#ef4444";
+        deleteStep2.style.display = "none";
+        deleteConfirmBtn.disabled = true;
+        deleteConfirmBtn.style.opacity = "0.5";
+        deleteConfirmBtn.style.cursor = "not-allowed";
+        if (deletePasswordInput) deletePasswordInput.value = "";
+      }
     });
     deleteConfirmInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDeleteModal();
+    });
+  }
+
+  // Step 2 — password must match stored admin key
+  if (deletePasswordInput) {
+    deletePasswordInput.addEventListener("input", () => {
+      const isDeleteTyped = deleteConfirmInput.value.trim() === "DELETE";
+      const isPwCorrect = deletePasswordInput.value === getKey();
+      const ready = isDeleteTyped && isPwCorrect;
+      deleteConfirmBtn.disabled = !ready;
+      deleteConfirmBtn.style.opacity = ready ? "1" : "0.5";
+      deleteConfirmBtn.style.cursor = ready ? "pointer" : "not-allowed";
+      $("#deleteConfirmError").style.display = "none";
+    });
+    deletePasswordInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !deleteConfirmBtn.disabled) confirmDeleteAll();
       if (e.key === "Escape") closeDeleteModal();
     });
   }
+
   if (deleteConfirmBtn) deleteConfirmBtn.addEventListener("click", confirmDeleteAll);
 
   // Close delete modal on overlay click

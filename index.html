@@ -320,27 +320,50 @@
 
   <!-- Delete All Confirmation Modal -->
   <div id="deleteModal" class="modal-overlay hidden" style="z-index:9999;">
-    <div class="modal-card glass-card" style="max-width:440px;width:90%;padding:32px;">
-      <div style="text-align:center;margin-bottom:20px;">
+    <div class="modal-card glass-card" style="max-width:460px;width:90%;padding:32px;">
+
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:24px;">
         <div style="width:56px;height:56px;background:rgba(239,68,68,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
           <svg viewBox="0 0 24 24" width="28" height="28" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
-        <h2 style="margin:0 0 8px;font-size:20px;color:#ef4444;">Delete All Registrations?</h2>
-        <p style="color:var(--text-secondary);font-size:14px;margin:0;">This will permanently delete <strong style="color:var(--text-primary);">all student records</strong> from the database. This cannot be undone.</p>
+        <h2 style="margin:0 0 6px;font-size:20px;color:#ef4444;">Delete All Registrations?</h2>
+        <p style="color:var(--text-secondary);font-size:13px;margin:0;">This permanently deletes <strong style="color:var(--text-primary);">all student records</strong> from Supabase. This <u>cannot</u> be undone.</p>
       </div>
-      <div style="margin-bottom:20px;">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Type <strong style="color:#ef4444;font-family:monospace;letter-spacing:1px;">DELETE</strong> to confirm:</p>
+
+      <!-- Step indicator -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:24px;">
+        <div id="deleteStep1Dot" style="width:28px;height:28px;border-radius:50%;background:#ef4444;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+        <div style="flex:1;height:2px;background:rgba(239,68,68,0.2);"><div id="deleteStepLine" style="height:100%;width:0%;background:#ef4444;transition:width 0.4s;"></div></div>
+        <div id="deleteStep2Dot" style="width:28px;height:28px;border-radius:50%;background:rgba(239,68,68,0.15);color:#ef4444;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(239,68,68,0.3);">2</div>
+      </div>
+
+      <!-- Step 1: Type DELETE -->
+      <div id="deleteStep1">
+        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 8px;">Step 1 — Type <strong style="color:#ef4444;font-family:monospace;letter-spacing:1px;">DELETE</strong> to continue:</p>
         <input id="deleteConfirmInput" type="text" class="field" placeholder="Type DELETE here" autocomplete="off"
-          style="width:100%;box-sizing:border-box;border:1.5px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.05);color:var(--text-primary);">
-        <p id="deleteConfirmError" style="color:#ef4444;font-size:12px;margin:6px 0 0;display:none;">You must type DELETE exactly to proceed.</p>
+          style="width:100%;box-sizing:border-box;border:1.5px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);color:var(--text-primary);">
       </div>
-      <div style="display:flex;gap:12px;">
+
+      <!-- Step 2: Admin password (hidden until step 1 passes) -->
+      <div id="deleteStep2" style="display:none;margin-top:18px;">
+        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 8px;">Step 2 — Enter your <strong style="color:var(--text-primary);">admin password</strong> to confirm:</p>
+        <input id="deletePasswordInput" type="password" class="field" placeholder="Admin password" autocomplete="off"
+          style="width:100%;box-sizing:border-box;border:1.5px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);color:var(--text-primary);">
+      </div>
+
+      <!-- Error message -->
+      <p id="deleteConfirmError" style="color:#ef4444;font-size:12px;margin:10px 0 0;display:none;"></p>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:12px;margin-top:20px;">
         <button id="deleteCancelBtn" class="btn btn-secondary" style="flex:1;">Cancel</button>
         <button id="deleteConfirmBtn" class="btn" style="flex:1;background:#ef4444;color:#fff;opacity:0.5;cursor:not-allowed;" disabled>
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Delete All
         </button>
       </div>
+
     </div>
   </div>
 
