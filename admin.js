@@ -1424,6 +1424,51 @@ function switchPage(pageId) {
   ACTIVE_PAGE = pageId;
 }
 
+// Table Data Source Switcher Helper
+function setTableSource(source) {
+  ACTIVE_TABLE = source === "backup" || source === "registrations_backup" ? "registrations_backup" : "registrations";
+  const liveBtn = $("#toggleLiveTableBtn");
+  const backupBtn = $("#toggleBackupTableBtn");
+  const codeBadge = $("#activeTableCode");
+
+  if (ACTIVE_TABLE === "registrations_backup") {
+    if (liveBtn) {
+      liveBtn.style.background = "transparent";
+      liveBtn.style.color = "var(--text-secondary)";
+      liveBtn.style.boxShadow = "none";
+    }
+    if (backupBtn) {
+      backupBtn.style.background = "#fff";
+      backupBtn.style.color = "var(--text-primary)";
+      backupBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+    }
+    if (codeBadge) {
+      codeBadge.textContent = "public.registrations_backup";
+      codeBadge.style.background = "rgba(56,189,248,0.1)";
+      codeBadge.style.color = "#0284c7";
+    }
+  } else {
+    if (liveBtn) {
+      liveBtn.style.background = "#fff";
+      liveBtn.style.color = "var(--text-primary)";
+      liveBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+    }
+    if (backupBtn) {
+      backupBtn.style.background = "transparent";
+      backupBtn.style.color = "var(--text-secondary)";
+      backupBtn.style.boxShadow = "none";
+    }
+    if (codeBadge) {
+      codeBadge.textContent = "public.registrations";
+      codeBadge.style.background = "rgba(16,185,129,0.1)";
+      codeBadge.style.color = "#059669";
+    }
+  }
+
+  updateFilterNote();
+  load(false, true);
+}
+
 // Event Bindings and Bootstrapping
 function init() {
   gateBtn.addEventListener("click", tryUnlock);
@@ -1442,6 +1487,13 @@ function init() {
 
   if (refreshBtn) refreshBtn.addEventListener("click", () => load(false, true));
   exportBtn.addEventListener("click", exportCSV);
+
+  // Table Source Toggle Buttons
+  const toggleLiveTableBtn = $("#toggleLiveTableBtn");
+  if (toggleLiveTableBtn) toggleLiveTableBtn.addEventListener("click", () => setTableSource("live"));
+
+  const toggleBackupTableBtn = $("#toggleBackupTableBtn");
+  if (toggleBackupTableBtn) toggleBackupTableBtn.addEventListener("click", () => setTableSource("backup"));
 
   const backupBtn = $("#backupBtn");
   if (backupBtn) backupBtn.addEventListener("click", backupJSON);
@@ -1463,7 +1515,8 @@ function init() {
   if (viewBackupArchiveBtn) {
     viewBackupArchiveBtn.addEventListener("click", () => {
       closeSupabaseBackupModal();
-      switchPage("backup-archive");
+      setTableSource("backup");
+      switchPage("all");
     });
   }
 
