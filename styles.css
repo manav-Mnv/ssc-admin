@@ -1451,3 +1451,132 @@ tr.row.open .chevy-btn {
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
   border-color: rgba(240, 81, 56, 0.2) !important;
 }
+
+/* --- High-Performance Pagination Bar --- */
+.pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.5);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pagination-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pagination-size-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.page-size-select {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--panel-bg-solid);
+  font-family: var(--font-family);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.page-size-select:focus {
+  border-color: var(--swift);
+}
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--panel-bg-solid);
+  font-family: var(--font-family);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.page-btn:hover:not(:disabled) {
+  background: rgba(240, 81, 56, 0.08);
+  border-color: rgba(240, 81, 56, 0.3);
+  color: var(--swift);
+}
+.page-btn.active {
+  background: var(--swift-gradient);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(240, 81, 56, 0.3);
+}
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* --- Array Badge Chips --- */
+.tag-chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: rgba(240, 81, 56, 0.08);
+  color: var(--swift);
+  border: 1px solid rgba(240, 81, 56, 0.2);
+  line-height: 1.4;
+}
+.tag-chip.blue {
+  background: rgba(0, 132, 255, 0.08);
+  color: var(--accent-blue);
+  border-color: rgba(0, 132, 255, 0.2);
+}
+.tag-chip.purple {
+  background: rgba(147, 51, 234, 0.08);
+  color: var(--accent-purple);
+  border-color: rgba(147, 51, 234, 0.2);
+}
+.tag-chip.green {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--accent-green);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* Spin animation helper */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+.syncing svg,
+.btn.syncing svg {
+  animation: spin 0.8s linear infinite !important;
+}
+.spin-hover:hover {
+  transform: rotate(180deg);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}

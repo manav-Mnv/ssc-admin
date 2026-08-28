@@ -1,73 +1,167 @@
 const { createClient } = require("@supabase/supabase-js");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_KEY = process.env.ADMIN_KEY;
+
+function isAuthorized(reqAdminKey, configuredKey) {
+  if (!configuredKey || typeof reqAdminKey !== "string" || !reqAdminKey) return false;
+  const hashReq = crypto.createHash("sha256").update(String(reqAdminKey)).digest();
+  const hashConf = crypto.createHash("sha256").update(String(configuredKey)).digest();
+  return crypto.timingSafeEqual(hashReq, hashConf);
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
     return;
   }
-  if (!ADMIN_KEY || req.headers["x-admin-key"] !== ADMIN_KEY) {
-    res.status(401).json({ error: "unauthorized" });
+
+  const clientKey = req.headers["x-admin-key"] || (req.body && req.body.key);
+  if (!ADMIN_KEY || !isAuthorized(clientKey, ADMIN_KEY)) {
+    res.status(401).json({ error: "Unauthorized: Invalid or missing admin key" });
     return;
   }
+
   if (!supabaseUrl || !supabaseServiceKey) {
     res.status(500).json({ error: "Server error: Supabase credentials not configured." });
     return;
   }
+
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    res.status(500).json({ error: "Server error: SMTP credentials not configured in environment." });
+    return;
+  }
+
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    // Fetch 5 unsent registrations
-    const { data: students, error } = await supabase
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    });
+
+    const batchSize = Math.min(Math.max(parseInt(req.body && req.body.batchSize, 10) || 5, 1), 25);
+
+    // Fetch unsent registrations
+    const { data: students, error: fetchErr } = await supabase
       .from("registrations")
-      .select("id, email, full_name")
+      .select("id, email, full_name, enrollment_number, faculty_institute")
       .eq("email_sent", false)
-      .limit(5);
-    if (error) return res.status(500).json({ error: error.message });
-    if (!students || students.length === 0) {
-      return res.status(200).json({ processed: 0, message: "Queue is empty!" });
+      .order("created_at", { ascending: true })
+      .limit(batchSize);
+
+    if (fetchErr) {
+      return res.status(500).json({ error: fetchErr.message });
     }
-    // Configure Nodemailer
+
+    if (!students || students.length === 0) {
+      return res.status(200).json({
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        message: "Email queue is empty. All registrations processed!"
+      });
+    }
+
+    // Configure Nodemailer transporter
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      port: parseInt(process.env.SMTP_PORT, 10) || 465,
+      secure: process.env.SMTP_SECURE !== "false",
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
     });
+
     let sentCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
     for (const student of students) {
-      const first = student.full_name.trim().split(" ")[0];
+      const rawName = (student.full_name || "Applicant").trim();
+      const first = escapeHtml(rawName.split(" ")[0]);
+      const fullNameEsc = escapeHtml(rawName);
       const uniqueHash = crypto.randomBytes(4).toString("hex").toUpperCase();
-      
+      const studentEmail = (student.email || "").trim();
+
+      if (!studentEmail || !studentEmail.includes("@")) {
+        failedCount++;
+        errors.push({ id: student.id, email: studentEmail, error: "Invalid email address format" });
+        continue;
+      }
+
       const html = `
-        <body style="font-family:sans-serif;padding:24px;">
-          <h3>Hi ${first},</h3>
-          <p>Your registration for the Swift Student Challenge 2027 at Parul University is recorded.</p>
-          <p>Our team is now reviewing your idea. We will contact you soon regarding the next stages.</p>
-          <hr/>
-          <small style="color:gray;">REF: #${uniqueHash}</small>
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"></head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f6f7fb; margin: 0; padding: 24px; color: #1d1d1f;">
+          <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 14px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: #f05138;">Swift Student Challenge 2027</h2>
+              <p style="margin: 4px 0 0; font-size: 13px; color: #6b7280;">Swift Coding Club · Parul University</p>
+            </div>
+            
+            <p style="font-size: 16px; line-height: 1.5; margin-bottom: 16px;">Dear <strong>${fullNameEsc}</strong>,</p>
+            <p style="font-size: 15px; line-height: 1.6; color: #374151;">Your application for the <strong>Swift Student Challenge 2027</strong> at Parul University has been recorded successfully.</p>
+            <p style="font-size: 15px; line-height: 1.6; color: #374151;">Our club technical leads and mentors are reviewing your submitted details and app idea. We will reach out to you with workshop schedules, mentoring sessions, and resources.</p>
+            
+            <div style="margin: 28px 0; padding: 16px 20px; background: #fafafa; border-radius: 8px; border-left: 4px solid #f05138;">
+              <p style="margin: 0; font-size: 13px; color: #6b7280; font-weight: 600;">APPLICATION REFERENCE</p>
+              <p style="margin: 4px 0 0; font-family: monospace; font-size: 16px; font-weight: 700; color: #111827;">#SSC27-${uniqueHash}</p>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">Apple Authorized Training Center for Education (AATCe) · Parul University</p>
+          </div>
         </body>
+        </html>
       `;
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || `"AATCe Parul University" <${process.env.SMTP_USER}>`,
-        to: student.email,
-        subject: "Application Recorded — AATCe Parul University",
-        html: html,
-      });
-      await supabase
-        .from("registrations")
-        .update({ email_sent: true })
-        .eq("id", student.id);
-      sentCount++;
-      // Small delay between sends to bypass spam filters
-      await new Promise(r => setTimeout(r, 1000));
+
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || `"AATCe Parul University" <${process.env.SMTP_USER}>`,
+          to: studentEmail,
+          subject: "Application Recorded — Swift Student Challenge 2027 (AATCe PU)",
+          html: html,
+        });
+
+        // Atomically update database status
+        const { error: updateErr } = await supabase
+          .from("registrations")
+          .update({ email_sent: true })
+          .eq("id", student.id);
+
+        if (updateErr) {
+          console.error(`Failed to update status for ${student.id}:`, updateErr.message);
+        }
+
+        sentCount++;
+      } catch (sendErr) {
+        failedCount++;
+        errors.push({ id: student.id, email: studentEmail, error: sendErr.message });
+      }
+
+      // Small delay between sends to bypass spam filters / rate limits
+      await new Promise((resolve) => setTimeout(resolve, 800));
     }
-    res.status(200).json({ processed: sentCount, remaining: students.length - sentCount });
+
+    res.status(200).json({
+      processed: sentCount + failedCount,
+      sent: sentCount,
+      failed: failedCount,
+      errors: errors.length > 0 ? errors : undefined
+    });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message ? e.message : e) });
   }

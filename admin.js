@@ -47,44 +47,87 @@ let ALL_ROWS = [];
 let ACTIVE_SEGMENT = null;
 let ACTIVE_DEPARTMENT = null;
 let ACTIVE_PAGE = "dashboard";
-let activeRowData = null;
-let currentTab = "all";
-// Chart instances removed
+let ACTIVE_TABLE = "registrations"; // "registrations" or "registrations_backup"
 let isDispatching = false;
 let stopDispatchFlag = false;
 
-// Links columns
-const LINK_COLS = {
-  linkedin: "linkedin_profile",
-  web: "portfolio_website",
-  github: "github_profile"
-};
+// Pagination State
+let CURRENT_PAGE = 1;
+let PAGE_SIZE = 50;
 
+// Security & URL Validation Utility
+function esc(s) {
+  if (s === null || s === undefined) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function safeUrl(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "n/a") return null;
+  
+  // Prevent javascript:, data:, vbscript:, file: protocol attacks
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:") || lower.startsWith("file:")) {
+    return null;
+  }
+  
+  // If user provided a domain without protocol (e.g. github.com/user), prepend https://
+  if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch (_) {}
+  
+  return null;
+}
+
+// Link helper
 function hasLink(r, col) {
-  return r[col] && String(r[col]).trim() !== "" && String(r[col]).toLowerCase() !== "null";
+  return safeUrl(r[col]) !== null;
 }
 
 // Segmentation Filters Config
 const SEGMENTS = [
   { key: "unsent", label: "Email Pending", test: (r) => !r.email_sent },
   { key: "sent", label: "Email Sent", test: (r) => r.email_sent },
-  { key: "ideas", label: "App Ideas Ready", test: (r) => String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim().length > 0 },
-  { key: "linkedin", label: "Has LinkedIn", test: (r) => hasLink(r, LINK_COLS.linkedin) },
-  { key: "github", label: "Has GitHub", test: (r) => hasLink(r, LINK_COLS.github) },
-  { key: "web", label: "Has Portfolio", test: (r) => hasLink(r, LINK_COLS.web) }
+  { key: "ideas", label: "App Ideas Ready", test: (r) => String(r.idea_description || r.app_playground_idea || "").trim().length > 0 },
+  { key: "mac", label: "Mac / iPad Access", test: (r) => String(r.mac_access || "").toLowerCase().includes("yes") || String(r.mac_access || "").toLowerCase().includes("mac") || String(r.mac_access || "").toLowerCase().includes("ipad") },
+  { key: "competitions", label: "Prior Hackathon Exp", test: (r) => r.previous_competitions === true || r.previous_competitions === "true" || r.previous_competitions === "yes" },
+  { key: "github", label: "Has GitHub", test: (r) => hasLink(r, "github_profile") },
+  { key: "linkedin", label: "Has LinkedIn", test: (r) => hasLink(r, "linkedin_profile") },
+  { key: "web", label: "Has Portfolio", test: (r) => hasLink(r, "portfolio_website") }
 ];
 
-// Tab Categorization Schema
+// Schema Categorization for 39 Columns
 const CATEGORIES = {
   personal: [
-    "full_name", "first_name", "last_name", "email", "phone", "phone_number", 
-    "gender", "age", "date_of_birth", "dob", "enrollment_id", "enrollment_no", 
-    "faculty_institute", "programme_course", "current_semester_year", "semester", "cgpa", "gpa"
+    "full_name", "email", "contact_number", "faculty_institute", "programme_course", 
+    "current_semester_year", "division_batch", "enrollment_number", "student_status", 
+    "has_uni_email", "uni_email", "uni_enrollment_id", "personal_email"
   ],
-  swift: [
-    "coding_experience", "swift_experience", "app_playground_idea", "idea_description", 
-    "playground_idea", "commitment", "hours_per_week", "github_profile", "linkedin_profile", 
-    "portfolio_website", "email_sent", "created_at"
+  device: [
+    "mac_access", "device_frequency", "needs_mac_lab", "hours_per_week_prep", 
+    "app_experience", "apple_experience", "independence_confidence", "interests_improving", 
+    "previous_competitions", "competition_details"
+  ],
+  idea: [
+    "why_interested", "has_idea", "idea_description", "excitement_level", 
+    "build_interest", "commitment_level", "hours_per_week_program", "work_schedule", 
+    "willing_to_attend", "anything_else"
+  ],
+  developer: [
+    "github_profile", "linkedin_profile", "portfolio_website", "email_sent", "created_at"
   ]
 };
 
@@ -117,24 +160,23 @@ async function tryUnlock() {
     if (r.status === 200) {
       sessionStorage.setItem(KEY_STORE, passcode);
       
-      // Premium GSAP Out/In Transition
+      // GSAP Out/In Transition
       const tl = gsap.timeline();
       tl.to(".gate-card", {
-        duration: 0.4,
+        duration: 0.35,
         scale: 0.9,
         opacity: 0,
-        y: -30,
+        y: -25,
         ease: "power2.in"
       });
       tl.call(() => {
         gate.classList.add("hidden");
         app.classList.remove("hidden");
-        // Reset gate-card styles for next logout
         gsap.set(".gate-card", { scale: 1, opacity: 1, y: 0 });
       });
       tl.fromTo("#app", 
-        { opacity: 0, y: 40 },
-        { duration: 0.6, opacity: 1, y: 0, ease: "power3.out" }
+        { opacity: 0, y: 30 },
+        { duration: 0.5, opacity: 1, y: 0, ease: "power3.out" }
       );
       
       load();
@@ -147,7 +189,7 @@ async function tryUnlock() {
       }
       gsap.fromTo(".gate-card", 
         { x: -10 },
-        { duration: 0.4, x: 0, ease: "rough({strength: 2, points: 8, template: linear})" }
+        { duration: 0.35, x: 0, ease: "rough({strength: 2, points: 8, template: linear})" }
       );
     }
   } catch (e) {
@@ -158,12 +200,11 @@ async function tryUnlock() {
 function logout() {
   sessionStorage.removeItem(KEY_STORE);
   
-  // Premium logout GSAP transition
   const tl = gsap.timeline();
   tl.to("#app", {
-    duration: 0.4,
+    duration: 0.3,
     opacity: 0,
-    y: 40,
+    y: 30,
     ease: "power2.in"
   });
   tl.call(() => {
@@ -174,23 +215,34 @@ function logout() {
   });
   tl.fromTo(".gate-card",
     { scale: 0.9, opacity: 0 },
-    { duration: 0.5, scale: 1, opacity: 1, ease: "power3.out" }
+    { duration: 0.4, scale: 1, opacity: 1, ease: "power3.out" }
   );
 }
 
-// Fetch Registrations Data
-async function load(isSilent = false) {
+// Fetch Registrations Data (Live Direct Sync)
+async function load(isSilent = false, isManual = false) {
+  const isBackupView = ACTIVE_TABLE === "registrations_backup";
+  const syncButtons = [$("#topbarSyncBtn"), $("#overviewRefreshBtn"), $("#refreshBtn")].filter(Boolean);
+  
+  // Activate spinning animation on all refresh buttons
+  syncButtons.forEach(btn => btn.classList.add("syncing"));
+
   if (!isSilent) {
     tableWrap.innerHTML = `
       <div class="loading-state">
         <div class="spinner"></div>
-        <p>Syncing submissions from Supabase...</p>
+        <p>${isBackupView ? "Syncing immutable backup archive from public.registrations_backup..." : "Syncing live submissions directly from Supabase..."}</p>
       </div>
     `;
   }
   
   try {
-    const r = await fetch("/api/entries", {
+    // Add cache-busting timestamp to bypass any intermediate caching
+    const basePath = isBackupView ? "/api/entries?source=backup" : "/api/entries";
+    const cacheBuster = `_t=${Date.now()}`;
+    const url = basePath.includes("?") ? `${basePath}&${cacheBuster}` : `${basePath}?${cacheBuster}`;
+
+    const r = await fetch(url, {
       headers: { "x-admin-key": getKey() }
     });
     
@@ -203,19 +255,47 @@ async function load(isSilent = false) {
     if (!data.rows) throw new Error(data.error || "Malformed API response");
     
     ALL_ROWS = data.rows;
-    countEl.textContent = data.count;
+    const totalCount = data.count !== undefined ? data.count : data.rows.length;
+    countEl.textContent = totalCount;
     
     calculateMetrics(data.rows);
     updateFacultyBreakdown(data.rows);
     renderTable(searchEl.value);
+    renderSegments(data.rows);
+
+    // Update Live Sync timestamp banner
+    const lastSyncedEl = $("#lastSyncedTime");
+    if (lastSyncedEl) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      lastSyncedEl.textContent = `Last updated: ${timeStr} · ${totalCount} records`;
+    }
+
+    if (isManual) {
+      const toast = document.createElement("div");
+      toast.style.cssText = "position:fixed;bottom:28px;right:28px;background:rgba(16,185,129,0.95);color:#fff;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(16,185,129,0.35);backdrop-filter:blur(8px);display:flex;align-items:center;gap:8px;";
+      toast.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Live sync complete: ${totalCount} registrations up-to-date</span>`;
+      document.body.appendChild(toast);
+      gsap.fromTo(toast, { opacity: 0, y: 15 }, { duration: 0.3, opacity: 1, y: 0, ease: "power2.out" });
+      setTimeout(() => gsap.to(toast, { duration: 0.3, opacity: 0, y: 10, onComplete: () => toast.remove() }), 3000);
+    }
   } catch (e) {
     tableWrap.innerHTML = `
       <div class="loading-state">
-        <span style="color:var(--swift-orange);font-size:24px;">⚠</span>
-        <p>Failed to sync database: ${e.message}</p>
-        <button onclick="load()" class="btn btn-secondary btn-sm" style="margin-top:10px;">Retry Connect</button>
+        <span style="color:var(--swift);font-size:24px;">⚠</span>
+        <p>Failed to sync database: ${esc(e.message)}</p>
+        <button onclick="load(false, true)" class="btn btn-secondary btn-sm" style="margin-top:10px;">Retry Connect</button>
       </div>
     `;
+    const lastSyncedEl = $("#lastSyncedTime");
+    if (lastSyncedEl) {
+      lastSyncedEl.innerHTML = `<span style="color:#ef4444;">Sync Error: ${esc(e.message)}</span>`;
+    }
+  } finally {
+    // Remove spinning animation
+    setTimeout(() => {
+      syncButtons.forEach(btn => btn.classList.remove("syncing"));
+    }, 400);
   }
 }
 
@@ -233,9 +313,7 @@ function calculateMetrics(rows) {
   statEmailRatio.textContent = `${sentCount} sent / ${unsentCount} pending`;
 
   // Update Email Queue Manager UI
-  if (isDispatching) {
-    // Keep progress bar in dispatch state
-  } else {
+  if (!isDispatching) {
     queueProgressFill.style.width = `${pct}%`;
     queueProgressPct.textContent = `${pct}% dispatched`;
     queueProgressCount.textContent = `${sentCount} / ${total} emails sent`;
@@ -262,7 +340,7 @@ function calculateMetrics(rows) {
   let personalMailCount = 0;
   
   rows.forEach(r => {
-    if (r.has_uni_email) {
+    if (r.has_uni_email === true || r.has_uni_email === "true") {
       uniMailCount++;
     } else {
       personalMailCount++;
@@ -272,7 +350,7 @@ function calculateMetrics(rows) {
   if (statUniMail) statUniMail.textContent = uniMailCount;
   if (statPersonalMail) statPersonalMail.textContent = personalMailCount;
 
-  // 4. Render Segments Filters
+  // 3. Render Segments Filters
   renderSegments(rows);
 }
 
@@ -286,7 +364,7 @@ function renderSegments(rows) {
   segmentChips.innerHTML = SEGMENTS.map((s) => {
     const activeClass = ACTIVE_SEGMENT === s.key ? " active" : "";
     return `
-      <button class="chip${activeClass}" data-seg="${s.key}">
+      <button class="chip${activeClass}" data-seg="${esc(s.key)}">
         <span class="chip-label">${esc(s.label)}</span>
         <span class="chip-count">${counts[s.key]}</span>
       </button>
@@ -297,6 +375,7 @@ function renderSegments(rows) {
     chip.addEventListener("click", () => {
       const key = chip.getAttribute("data-seg");
       ACTIVE_SEGMENT = ACTIVE_SEGMENT === key ? null : key;
+      CURRENT_PAGE = 1;
       updateFilterNote();
       renderTable(searchEl.value);
     });
@@ -304,12 +383,26 @@ function renderSegments(rows) {
 }
 
 function updateFilterNote() {
+  if (ACTIVE_TABLE === "registrations_backup") {
+    activeFilterNote.innerHTML = `
+      <span style="color:#0284c7;display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Viewing <strong>Immutable Backup Archive (public.registrations_backup)</strong></span>
+      <button class="link-btn" id="returnToLiveBtn" style="color:#0284c7;font-weight:700;">Switch to Live Submissions</button>
+    `;
+    activeFilterNote.classList.remove("hidden");
+    const returnBtn = $("#returnToLiveBtn");
+    if (returnBtn) {
+      returnBtn.addEventListener("click", () => switchPage("all"));
+    }
+    return;
+  }
+
   if (!ACTIVE_SEGMENT) {
     activeFilterNote.textContent = "";
     activeFilterNote.classList.add("hidden");
     return;
   }
   const seg = SEGMENTS.find((s) => s.key === ACTIVE_SEGMENT);
+  if (!seg) return;
   activeFilterNote.innerHTML = `
     <span>Active Filter: Segmenting registrations matching <strong>${esc(seg.label)}</strong></span>
     <button class="link-btn" id="clearSegBtn">Reset Filter</button>
@@ -320,162 +413,278 @@ function updateFilterNote() {
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
       ACTIVE_SEGMENT = null;
+      CURRENT_PAGE = 1;
       updateFilterNote();
       renderTable(searchEl.value);
     });
   }
 }
 
-// Render Table
-function renderTable(query) {
-  const q = (query || "").trim().toLowerCase();
-  
-  let rows = ALL_ROWS.filter((r) => {
-    if (!q) return true;
-    return (
-      String(r.full_name || "").toLowerCase().includes(q) ||
-      String(r.email || "").toLowerCase().includes(q) ||
-      String(r.faculty_institute || "").toLowerCase().includes(q) ||
-      String(r.programme_course || "").toLowerCase().includes(q) ||
-      String(r.enrollment_id || "").toLowerCase().includes(q)
-    );
-  });
-
-  if (ACTIVE_DEPARTMENT) {
-    rows = rows.filter((r) => {
-      if (ACTIVE_DEPARTMENT === "uni-mail") return r.has_uni_email === true;
-      if (ACTIVE_DEPARTMENT === "personal-mail") return r.has_uni_email === false;
-      if (ACTIVE_DEPARTMENT === "ideas") {
-        const ideaText = String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim();
-        return ideaText.length > 0;
-      }
-      return true;
-    });
-  }
-
-  if (ACTIVE_SEGMENT) {
-    const seg = SEGMENTS.find((s) => s.key === ACTIVE_SEGMENT);
-    if (seg) rows = rows.filter(seg.test);
-  }
-
-  // Animate the table transition slightly
-  gsap.to(tableWrap, { duration: 0.15, opacity: 0, y: 5, onComplete: () => {
-    if (!rows.length) {
-      tableWrap.innerHTML = `
-        <div class="loading-state">
-          <span style="font-size:24px;">🔍</span>
-          <p>${q || ACTIVE_SEGMENT ? "No registration matches found." : "No records recorded."}</p>
-        </div>
-      `;
-      gsap.to(tableWrap, { duration: 0.25, opacity: 1, y: 0 });
-      return;
+// Array & Value Formatter Helper
+function parseArrayField(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+    if (val.includes(",")) {
+      return val.split(",").map(s => s.trim()).filter(Boolean);
     }
-
-    let html = `
-      <table class="entries">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Faculty</th>
-            <th>Programme</th>
-            <th>Sem</th>
-            <th>Email Type</th>
-            <th>Enrollment No.</th>
-            <th>Mac Access</th>
-            <th>App Idea</th>
-            <th>Submitted</th>
-            <th>Email Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    rows.forEach((r, i) => {
-      const idx = ALL_ROWS.indexOf(r) + 1;
-      const dateStr = fmtDate(r.created_at);
-      const isSent = r.email_sent;
-
-      // Faculty pill
-      const fac = (r.faculty_institute || "").trim().toUpperCase();
-      let facClass = "faculty-pill";
-      if (fac.includes("PIET")) facClass += " piet";
-      else if (fac.includes("PIT")) facClass += " pit";
-
-      // Email type badge
-      const hasUni = r.has_uni_email === true || r.has_uni_email === "true";
-      const emailTypeBadge = hasUni
-        ? `<span class="status-indicator sent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>🎓 Uni</span></span>`
-        : `<span class="status-indicator unsent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>📧 Personal</span></span>`;
-
-      // App idea preview (first 40 chars)
-      const rawIdea = String(r.idea_description || r.app_playground_idea || r.playground_idea || "").trim();
-      const ideaPreview = rawIdea.length > 0
-        ? `<span title="${esc(rawIdea)}" style="cursor:default;">${esc(rawIdea.slice(0, 38))}${rawIdea.length > 38 ? "…" : ""}</span>`
-        : `<span style="color:var(--text-muted,#888);font-size:11px;">—</span>`;
-
-      // Mac access short label
-      const macRaw = String(r.mac_access || "").trim();
-      const macLabel = macRaw || "—";
-
-      html += `
-        <tr class="row" data-id="${r.id || idx}">
-          <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
-          <td class="name-cell">${esc(r.full_name || "N/A")}</td>
-          <td class="email-cell" style="font-size:12.5px;">${esc(r.email || "N/A")}</td>
-          <td style="font-size:12.5px;letter-spacing:0.3px;">${esc(r.contact_number || "—")}</td>
-          <td><span class="${facClass}">${esc(r.faculty_institute || "Other")}</span></td>
-          <td style="font-size:12px;">${esc(r.programme_course || "—")}</td>
-          <td style="text-align:center;font-size:12px;">${esc(String(r.current_semester_year || "—"))}</td>
-          <td>${emailTypeBadge}</td>
-          <td class="enrollment-cell">${esc(r.enrollment_number || r.enrollment_id || r.enrollment_no || "—")}</td>
-          <td style="font-size:12px;">${esc(macLabel)}</td>
-          <td style="font-size:12px;max-width:160px;overflow:hidden;">${ideaPreview}</td>
-          <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">${esc(dateStr)}</td>
-          <td>
-            <span class="status-indicator ${isSent ? 'sent' : 'unsent'}">
-              <span class="status-dot"></span>
-              <span>${isSent ? 'Sent' : 'Pending'}</span>
-            </span>
-          </td>
-          <td><span class="chevy-btn">▶</span></td>
-        </tr>
-      `;
-    });
-
-    html += `
-        </tbody>
-      </table>
-    `;
-    tableWrap.innerHTML = html;
-
-    // Attach row detail listener
-    tableWrap.querySelectorAll("tr.row").forEach((tr) => {
-      tr.addEventListener("click", () => {
-        const id = tr.getAttribute("data-id");
-        const row = ALL_ROWS.find(r => String(r.id || (ALL_ROWS.indexOf(r) + 1)) === id);
-        if (row) toggleDetailRow(tr, row);
-      });
-    });
-
-    gsap.fromTo(tableWrap, 
-      { opacity: 0, y: 10 },
-      { duration: 0.4, opacity: 1, y: 0, ease: "power2.out" }
-    );
-  }});
+    return [val.trim()];
+  }
+  return [String(val)];
 }
 
-// Dynamic Collapsible Detail Row System (Inline Expansion)
+function renderFormattedValue(key, value) {
+  if (value === null || value === undefined || value === "") {
+    return `<span class="empty">N/A (Not Provided)</span>`;
+  }
+
+  // Boolean fields
+  if (typeof value === "boolean" || value === "true" || value === "false") {
+    const isTrue = value === true || value === "true";
+    return `<span class="status-indicator ${isTrue ? 'sent' : 'unsent'}"><span class="status-dot"></span><span>${isTrue ? 'Yes / Confirmed' : 'No'}</span></span>`;
+  }
+
+  // Array fields
+  const isArrayField = Array.isArray(value) || 
+    key === "interests_improving" || 
+    key === "excitement_level" || 
+    key === "build_interest" || 
+    key === "work_schedule";
+
+  if (isArrayField) {
+    const items = parseArrayField(value);
+    if (!items.length) return `<span class="empty">None selected</span>`;
+    const colorClasses = ["", "blue", "purple", "green"];
+    return `
+      <div class="tag-chip-container">
+        ${items.map((item, idx) => `
+          <span class="tag-chip ${colorClasses[idx % colorClasses.length]}">${esc(item)}</span>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // Links & URLs
+  const validLink = safeUrl(value);
+  if (validLink) {
+    return `<a href="${esc(validLink)}" target="_blank" rel="noopener noreferrer" style="color:var(--swift);text-decoration:underline;">${esc(String(value))} ↗</a>`;
+  }
+
+  return esc(String(value));
+}
+
+// Get Filtered Rows based on search, department, and segment
+function getFilteredRows(query) {
+  const q = (query || "").trim().toLowerCase();
+  
+  return ALL_ROWS.filter((r) => {
+    if (q) {
+      const match = (
+        String(r.full_name || "").toLowerCase().includes(q) ||
+        String(r.email || "").toLowerCase().includes(q) ||
+        String(r.personal_email || "").toLowerCase().includes(q) ||
+        String(r.uni_email || "").toLowerCase().includes(q) ||
+        String(r.contact_number || "").toLowerCase().includes(q) ||
+        String(r.enrollment_number || r.enrollment_id || "").toLowerCase().includes(q) ||
+        String(r.faculty_institute || "").toLowerCase().includes(q) ||
+        String(r.programme_course || "").toLowerCase().includes(q) ||
+        String(r.student_status || "").toLowerCase().includes(q) ||
+        String(r.idea_description || "").toLowerCase().includes(q)
+      );
+      if (!match) return false;
+    }
+
+    if (ACTIVE_DEPARTMENT) {
+      if (ACTIVE_DEPARTMENT === "uni-mail") {
+        if (!(r.has_uni_email === true || r.has_uni_email === "true")) return false;
+      } else if (ACTIVE_DEPARTMENT === "personal-mail") {
+        if (r.has_uni_email === true || r.has_uni_email === "true") return false;
+      } else if (ACTIVE_DEPARTMENT === "ideas") {
+        const ideaText = String(r.idea_description || r.app_playground_idea || "").trim();
+        if (ideaText.length === 0) return false;
+      }
+    }
+
+    if (ACTIVE_SEGMENT) {
+      const seg = SEGMENTS.find((s) => s.key === ACTIVE_SEGMENT);
+      if (seg && !seg.test(r)) return false;
+    }
+
+    return true;
+  });
+}
+
+// High-Performance Table Renderer with Pagination
+function renderTable(query) {
+  const filtered = getFilteredRows(query);
+  const totalFiltered = filtered.length;
+
+  if (totalFiltered === 0) {
+    tableWrap.innerHTML = `
+      <div class="loading-state">
+        <span style="font-size:24px;">🔍</span>
+        <p>${query || ACTIVE_SEGMENT || ACTIVE_DEPARTMENT ? "No registration matches found for current filter." : "No records recorded in database."}</p>
+      </div>
+    `;
+    return;
+  }
+
+  const effectivePageSize = PAGE_SIZE === "all" ? totalFiltered : PAGE_SIZE;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / effectivePageSize));
+  
+  if (CURRENT_PAGE > totalPages) CURRENT_PAGE = totalPages;
+  if (CURRENT_PAGE < 1) CURRENT_PAGE = 1;
+
+  const startIndex = (CURRENT_PAGE - 1) * effectivePageSize;
+  const endIndex = Math.min(startIndex + effectivePageSize, totalFiltered);
+  const pageRows = filtered.slice(startIndex, endIndex);
+
+  let html = `
+    <table class="entries">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Faculty</th>
+          <th>Programme</th>
+          <th>Sem</th>
+          <th>Email Type</th>
+          <th>Enrollment No.</th>
+          <th>Mac Access</th>
+          <th>App Idea</th>
+          <th>Submitted</th>
+          <th>Email Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  pageRows.forEach((r) => {
+    const idx = ALL_ROWS.indexOf(r) + 1;
+    const dateStr = fmtDate(r.created_at);
+    const isSent = r.email_sent;
+
+    const fac = (r.faculty_institute || "").trim().toUpperCase();
+    let facClass = "faculty-pill";
+    if (fac.includes("PIET")) facClass += " piet";
+    else if (fac.includes("PIT")) facClass += " pit";
+
+    const hasUni = r.has_uni_email === true || r.has_uni_email === "true";
+    const emailTypeBadge = hasUni
+      ? `<span class="status-indicator sent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>🎓 Uni</span></span>`
+      : `<span class="status-indicator unsent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>📧 Personal</span></span>`;
+
+    const rawIdea = String(r.idea_description || r.app_playground_idea || "").trim();
+    const ideaPreview = rawIdea.length > 0
+      ? `<span title="${esc(rawIdea)}" style="cursor:default;">${esc(rawIdea.slice(0, 38))}${rawIdea.length > 38 ? "…" : ""}</span>`
+      : `<span style="color:var(--text-muted);font-size:11px;">—</span>`;
+
+    const macRaw = String(r.mac_access || "").trim();
+    const macLabel = macRaw || "—";
+
+    html += `
+      <tr class="row" data-id="${esc(r.id || idx)}">
+        <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
+        <td class="name-cell">${esc(r.full_name || "N/A")}</td>
+        <td class="email-cell" style="font-size:12.5px;">${esc(r.email || "N/A")}</td>
+        <td style="font-size:12.5px;letter-spacing:0.3px;">${esc(r.contact_number || "—")}</td>
+        <td><span class="${facClass}">${esc(r.faculty_institute || "Other")}</span></td>
+        <td style="font-size:12px;">${esc(r.programme_course || "—")}</td>
+        <td style="text-align:center;font-size:12px;">${esc(String(r.current_semester_year || "—"))}</td>
+        <td>${emailTypeBadge}</td>
+        <td class="enrollment-cell">${esc(r.enrollment_number || r.enrollment_id || "—")}</td>
+        <td style="font-size:12px;">${esc(macLabel)}</td>
+        <td style="font-size:12px;max-width:160px;overflow:hidden;">${ideaPreview}</td>
+        <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">${esc(dateStr)}</td>
+        <td>
+          <span class="status-indicator ${isSent ? 'sent' : 'unsent'}">
+            <span class="status-dot"></span>
+            <span>${isSent ? 'Sent' : 'Pending'}</span>
+          </span>
+        </td>
+        <td><span class="chevy-btn">▶</span></td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  // Pagination Footer Bar
+  html += `
+    <div class="pagination-wrap">
+      <div class="pagination-info">
+        Showing <strong>${startIndex + 1}</strong>–<strong>${endIndex}</strong> of <strong>${totalFiltered}</strong> registrations
+      </div>
+      <div class="pagination-size-wrap">
+        <span>Rows per page:</span>
+        <select id="pageSizeSelect" class="page-size-select">
+          <option value="25" ${PAGE_SIZE === 25 ? 'selected' : ''}>25</option>
+          <option value="50" ${PAGE_SIZE === 50 ? 'selected' : ''}>50</option>
+          <option value="100" ${PAGE_SIZE === 100 ? 'selected' : ''}>100</option>
+          <option value="250" ${PAGE_SIZE === 250 ? 'selected' : ''}>250</option>
+          <option value="all" ${PAGE_SIZE === "all" ? 'selected' : ''}>All (${totalFiltered})</option>
+        </select>
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" id="firstPageBtn" ${CURRENT_PAGE === 1 ? 'disabled' : ''} title="First Page">«</button>
+        <button class="page-btn" id="prevPageBtn" ${CURRENT_PAGE === 1 ? 'disabled' : ''} title="Previous Page">‹</button>
+        <span style="font-size:12.5px;font-weight:600;padding:0 8px;">Page ${CURRENT_PAGE} of ${totalPages}</span>
+        <button class="page-btn" id="nextPageBtn" ${CURRENT_PAGE === totalPages ? 'disabled' : ''} title="Next Page">›</button>
+        <button class="page-btn" id="lastPageBtn" ${CURRENT_PAGE === totalPages ? 'disabled' : ''} title="Last Page">»</button>
+      </div>
+    </div>
+  `;
+
+  tableWrap.innerHTML = html;
+
+  // Attach row click listeners for inline expansion
+  tableWrap.querySelectorAll("tr.row").forEach((tr) => {
+    tr.addEventListener("click", () => {
+      const id = tr.getAttribute("data-id");
+      const row = ALL_ROWS.find(r => String(r.id || (ALL_ROWS.indexOf(r) + 1)) === id);
+      if (row) toggleDetailRow(tr, row);
+    });
+  });
+
+  // Attach pagination control listeners
+  const pageSizeSelect = $("#pageSizeSelect");
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener("change", (e) => {
+      const val = e.target.value;
+      PAGE_SIZE = val === "all" ? "all" : parseInt(val, 10);
+      CURRENT_PAGE = 1;
+      renderTable(searchEl.value);
+    });
+  }
+
+  const firstBtn = $("#firstPageBtn");
+  const prevBtn = $("#prevPageBtn");
+  const nextBtn = $("#nextPageBtn");
+  const lastBtn = $("#lastPageBtn");
+
+  if (firstBtn) firstBtn.addEventListener("click", () => { CURRENT_PAGE = 1; renderTable(searchEl.value); });
+  if (prevBtn) prevBtn.addEventListener("click", () => { if (CURRENT_PAGE > 1) { CURRENT_PAGE--; renderTable(searchEl.value); } });
+  if (nextBtn) nextBtn.addEventListener("click", () => { if (CURRENT_PAGE < totalPages) { CURRENT_PAGE++; renderTable(searchEl.value); } });
+  if (lastBtn) lastBtn.addEventListener("click", () => { CURRENT_PAGE = totalPages; renderTable(searchEl.value); });
+}
+
+// Collapsible Detail Row System (Inline Accordion with 39-column Support)
 function toggleDetailRow(tr, row) {
   const existing = tr.nextElementSibling;
   if (existing && existing.classList.contains("detail-row")) {
     const wrapper = existing.querySelector(".detail-content-wrapper");
-    // Close with GSAP
     gsap.to(wrapper, {
-      duration: 0.3,
+      duration: 0.25,
       height: 0,
       opacity: 0,
       ease: "power2.in",
@@ -487,12 +696,10 @@ function toggleDetailRow(tr, row) {
     return;
   }
   
-  // Close any other open detail rows (accordion style)
+  // Close any open detail rows
   $$("tr.detail-row").forEach((openRow) => {
     const prev = openRow.previousElementSibling;
-    if (prev) {
-      prev.classList.remove("open");
-    }
+    if (prev) prev.classList.remove("open");
     openRow.remove();
   });
   
@@ -500,14 +707,15 @@ function toggleDetailRow(tr, row) {
   detailRow.className = "detail-row";
   
   detailRow.innerHTML = `
-    <td colspan="9">
+    <td colspan="14">
       <div class="detail-content-wrapper" style="height: 0; opacity: 0;">
         <div class="detail-inner glass-card">
           <div class="detail-tabs">
-            <button class="detail-tab-btn active" data-tab="all">All Fields</button>
+            <button class="detail-tab-btn active" data-tab="all">All 39 Fields</button>
             <button class="detail-tab-btn" data-tab="personal">Personal & Academic</button>
-            <button class="detail-tab-btn" data-tab="developer">Developer Profile</button>
-            <button class="detail-tab-btn" data-tab="idea">App Idea & Submissions</button>
+            <button class="detail-tab-btn" data-tab="device">Device & Experience</button>
+            <button class="detail-tab-btn" data-tab="idea">App Idea & Motivation</button>
+            <button class="detail-tab-btn" data-tab="developer">Developer Profiles</button>
           </div>
           <div class="detail-body-container">
             <!-- Dynamically populated -->
@@ -530,27 +738,15 @@ function toggleDetailRow(tr, row) {
     let html = "";
     
     if (inlineTab === "developer") {
-      const experienceVal = row.coding_experience || row.swift_experience || "";
-      const commitmentVal = row.commitment || row.hours_per_week || "";
-      const github = row.github_profile || "";
-      const linkedin = row.linkedin_profile || "";
-      const portfolio = row.portfolio_website || "";
+      const github = safeUrl(row.github_profile);
+      const linkedin = safeUrl(row.linkedin_profile);
+      const portfolio = safeUrl(row.portfolio_website);
       
       html = `
         <div class="inline-data-grid">
-          <div class="idea-meta-card">
-            <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Coding Experience</span>
-            <div class="experience-badge">${experienceVal ? esc(experienceVal) : 'Not specified'}</div>
-          </div>
-          
-          <div class="idea-meta-card">
-            <span class="modal-label"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Commitment Details</span>
-            <div class="commitment-info">${commitmentVal ? esc(commitmentVal) : 'Not specified'}</div>
-          </div>
-
           <div class="links-panel span-2">
-            <h4 class="section-subtitle">Developer Portfolio & Links</h4>
-            <div class="links-grid">
+            <h4 class="section-subtitle">Verified Developer Portfolios & Social Links</h4>
+            <div class="links-grid" style="margin-top:12px;">
               ${github ? `
                 <a href="${esc(github)}" target="_blank" rel="noopener noreferrer" class="link-card github">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
@@ -559,13 +755,13 @@ function toggleDetailRow(tr, row) {
               ` : ''}
               ${linkedin ? `
                 <a href="${esc(linkedin)}" target="_blank" rel="noopener noreferrer" class="link-card linkedin">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                   <span>LinkedIn Profile ↗</span>
                 </a>
               ` : ''}
               ${portfolio ? `
                 <a href="${esc(portfolio)}" target="_blank" rel="noopener noreferrer" class="link-card portfolio">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                   <span>Portfolio Website ↗</span>
                 </a>
               ` : ''}
@@ -574,56 +770,28 @@ function toggleDetailRow(tr, row) {
           </div>
         </div>
       `;
-    } else if (inlineTab === "idea") {
-      const ideaVal = row.app_playground_idea || row.idea_description || row.playground_idea || "";
-      const previousComp = row.previous_competitions ? "Yes (Prior experience in competitions)" : "No (First-time participant)";
-      const compDetails = row.competition_details || "";
-
-      html = `
-        <div class="inline-data-grid">
-          <div class="idea-showcase span-2">
-            <div class="idea-banner">
-              <div class="idea-badge">
-                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg> APP PLAYGROUND IDEA
-              </div>
-              <h3>Proposed Project Description & Idea</h3>
-            </div>
-            <div class="idea-text-box">
-              <p>${ideaVal ? esc(ideaVal) : 'The student did not submit or describe their app playground idea in this registration.'}</p>
-            </div>
-          </div>
-          
-          <div class="idea-meta-card span-2">
-            <span class="modal-label">Previous Competitions / Hackathons</span>
-            <div class="commitment-info" style="font-weight:600;">${esc(previousComp)} ${compDetails ? ` — ${esc(compDetails)}` : ''}</div>
-          </div>
-        </div>
-      `;
     } else {
       const keys = Object.keys(row);
       let itemsHtml = "";
+      
       keys.forEach((key) => {
         if (key === "id") return;
+        
+        // Tab-specific filters
         if (inlineTab === "personal" && !CATEGORIES.personal.includes(key)) return;
+        if (inlineTab === "device" && !CATEGORIES.device.includes(key)) return;
+        if (inlineTab === "idea" && !CATEGORIES.idea.includes(key)) return;
         
         const value = row[key];
-        let displayVal = "";
+        const displayVal = renderFormattedValue(key, value);
         
-        if (value === null || value === undefined || value === "") {
-          displayVal = `<span class="empty">N/A (Not Provided)</span>`;
-        } else if (typeof value === "boolean") {
-          const isTrue = value === true;
-          displayVal = `<span class="status-indicator ${isTrue ? 'sent' : 'unsent'}"><span class="status-dot"></span><span>${isTrue ? 'Yes / True' : 'No / False'}</span></span>`;
-        } else {
-          const valStr = String(value);
-          if (valStr.startsWith("http://") || valStr.startsWith("https://")) {
-            displayVal = `<a href="${esc(valStr)}" target="_blank" rel="noopener noreferrer">${esc(valStr)} ↗</a>`;
-          } else {
-            displayVal = esc(valStr);
-          }
-        }
-        
-        const isLongText = key.toLowerCase().includes('idea') || key.toLowerCase().includes('description') || key.toLowerCase().includes('experience') || key.toLowerCase().includes('detail') || key.toLowerCase().includes('reason');
+        const isLongText = key.toLowerCase().includes('idea') || 
+                           key.toLowerCase().includes('description') || 
+                           key.toLowerCase().includes('why_') || 
+                           key.toLowerCase().includes('anything_') ||
+                           key.toLowerCase().includes('detail') ||
+                           Array.isArray(value);
+                           
         const spanClass = isLongText ? "modal-item span-2" : "modal-item";
         const prettyLabel = key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
@@ -637,23 +805,22 @@ function toggleDetailRow(tr, row) {
       
       html = `<div class="inline-data-grid">${itemsHtml}</div>`;
     }
+    
     container.innerHTML = html;
   }
   
   renderInlineData();
   
-  // Animate Open
   gsap.to(wrapper, {
-    duration: 0.4,
+    duration: 0.35,
     height: "auto",
     opacity: 1,
     ease: "power2.out"
   });
   
-  // Set up click handlers for tabs
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
-      e.stopPropagation(); // prevent closing row
+      e.stopPropagation();
       tabBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       inlineTab = btn.getAttribute("data-tab");
@@ -662,7 +829,7 @@ function toggleDetailRow(tr, row) {
   });
 }
 
-// Calculate and update the Faculty & Department breakdown cards
+// Update Faculty & Department Breakdown Cards
 function updateFacultyBreakdown(rows) {
   const total = rows.length;
   let uniCount = 0;
@@ -670,24 +837,22 @@ function updateFacultyBreakdown(rows) {
   let ideasCount = 0;
   
   rows.forEach(r => {
-    if (r.has_uni_email) {
+    if (r.has_uni_email === true || r.has_uni_email === "true") {
       uniCount++;
     } else {
       personalCount++;
     }
-    const ideaText = String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim();
+    const ideaText = String(r.idea_description || r.app_playground_idea || "").trim();
     if (ideaText.length > 0) {
       ideasCount++;
     }
   });
   
-  // Calculate percentages
   const uniPct = total ? Math.round((uniCount / total) * 100) : 0;
   const personalPct = total ? Math.round((personalCount / total) * 100) : 0;
   const ideasPct = total ? Math.round((ideasCount / total) * 100) : 0;
   const allPct = 100;
   
-  // Update HTML elements
   const deptIdeasCount = $("#deptIdeasCount");
   const deptIdeasProgress = $("#deptIdeasProgress");
   const deptIdeasPct = $("#deptIdeasPct");
@@ -721,10 +886,9 @@ function updateFacultyBreakdown(rows) {
   if (deptOtherPct) deptOtherPct.textContent = `${total} entries combined`;
 }
 
-// Automated Batch Email Dispatch Loop
+// Batch Email Dispatch Loop
 async function startDispatch() {
   if (isDispatching) {
-    // If clicking while running, act as a Stop/Pause trigger
     stopDispatchFlag = true;
     startDispatchBtn.setAttribute("disabled", "true");
     queueStatusText.textContent = "Pausing dispatch queue after current batch...";
@@ -737,7 +901,6 @@ async function startDispatch() {
   isDispatching = true;
   stopDispatchFlag = false;
   
-  // Transition UI into Running State
   startDispatchBtn.innerHTML = `
     <span>Pause Queue</span>
     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -746,9 +909,7 @@ async function startDispatch() {
   startDispatchBtn.classList.add("btn-secondary");
   
   let processed = 0;
-  const initialUnsent = unsentCount;
   const totalCount = ALL_ROWS.length;
-
   queueStatusText.textContent = `Processing batch sends... Keep dashboard window open.`;
 
   while (isDispatching && !stopDispatchFlag) {
@@ -758,36 +919,32 @@ async function startDispatch() {
         headers: {
           "Content-Type": "application/json",
           "x-admin-key": getKey()
-        }
+        },
+        body: JSON.stringify({ batchSize: 5 })
       });
 
       if (!response.ok) {
-        const errData = await response.json();
+        const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || `HTTP error ${response.status}`);
       }
 
       const resData = await response.json();
-      processed += resData.processed;
+      processed += (resData.sent || resData.processed || 0);
 
-      // Silently sync database to update local cache
+      // Silently sync database
       await load(true);
 
-      // Re-calculate local pending count
       const currentUnsent = ALL_ROWS.filter(r => !r.email_sent).length;
       const sentCount = totalCount - currentUnsent;
       const localPct = totalCount ? Math.round((sentCount / totalCount) * 100) : 0;
 
-      // Update dispatcher progress bar dynamically
       queueProgressFill.style.width = `${localPct}%`;
       queueProgressPct.textContent = `${localPct}% processed`;
       queueProgressCount.textContent = `${sentCount} / ${totalCount} emails sent`;
       queueStatusText.textContent = `Dispatched batch successfully. Remaining unsent queue: ${currentUnsent}`;
 
-      // Break condition from backend empty queue
       if (resData.processed === 0 || currentUnsent === 0) {
         queueStatusText.textContent = "All email queue jobs completed successfully!";
-        
-        // Show success splash animation
         gsap.fromTo(".queue-manager", 
           { boxShadow: "0 0 0 rgba(48, 209, 88, 0)" },
           { duration: 0.6, boxShadow: "0 0 20px rgba(48, 209, 88, 0.4)", yoyo: true, repeat: 1 }
@@ -795,9 +952,7 @@ async function startDispatch() {
         break;
       }
 
-      // Small pause before requesting next batch to prevent client-side exhaustion
       await new Promise(resolve => setTimeout(resolve, 800));
-
     } catch (e) {
       queueStatusText.textContent = `Queue Error: ${e.message}`;
       startDispatchBtn.classList.remove("btn-secondary");
@@ -806,53 +961,22 @@ async function startDispatch() {
     }
   }
 
-  // Restore State on termination
   isDispatching = false;
   stopDispatchFlag = false;
   startDispatchBtn.removeAttribute("disabled");
-  
-  // Re-run standard metric calculation to reset buttons
   calculateMetrics(ALL_ROWS);
 }
 
-// Export Filtered Table as CSV
+// Export Filtered Table as CSV (All 39 Fields)
 function exportCSV() {
-  const q = searchEl.value.trim().toLowerCase();
-  
-  let rows = ALL_ROWS.filter((r) => {
-    if (!q) return true;
-    return (
-      String(r.full_name || "").toLowerCase().includes(q) ||
-      String(r.email || "").toLowerCase().includes(q) ||
-      String(r.faculty_institute || "").toLowerCase().includes(q) ||
-      String(r.programme_course || "").toLowerCase().includes(q) ||
-      String(r.enrollment_id || "").toLowerCase().includes(q)
-    );
-  });
+  const filtered = getFilteredRows(searchEl.value);
 
-  if (ACTIVE_DEPARTMENT) {
-    rows = rows.filter((r) => {
-      if (ACTIVE_DEPARTMENT === "uni-mail") return r.has_uni_email === true;
-      if (ACTIVE_DEPARTMENT === "personal-mail") return r.has_uni_email === false;
-      if (ACTIVE_DEPARTMENT === "ideas") {
-        const ideaText = String(r.app_playground_idea || r.idea_description || r.playground_idea || "").trim();
-        return ideaText.length > 0;
-      }
-      return true;
-    });
-  }
-
-  if (ACTIVE_SEGMENT) {
-    const seg = SEGMENTS.find((s) => s.key === ACTIVE_SEGMENT);
-    if (seg) rows = rows.filter(seg.test);
-  }
-
-  if (rows.length === 0) {
+  if (filtered.length === 0) {
     alert("There are no rows to export matching current filter.");
     return;
   }
 
-  // ── Structured CSV column map (matches Google Sheet column order) ──────────
+  // Exact 39-column map matching schema
   const CSV_COLUMNS = [
     { header: "Timestamp",                  key: "created_at",             type: "date"    },
     { header: "Full Name",                  key: "full_name",               type: "text"    },
@@ -878,6 +1002,7 @@ function exportCSV() {
     { header: "Prep Hours / Week",          key: "hours_per_week_prep",     type: "text"    },
     { header: "App Dev Experience",         key: "app_experience",          type: "text"    },
     { header: "Apple Platform Experience",  key: "apple_experience",        type: "text"    },
+    { header: "Independence / Confidence",  key: "independence_confidence", type: "text"    },
     { header: "Skills / Interests",         key: "interests_improving",     type: "array"   },
     { header: "Previous Competitions",      key: "previous_competitions",   type: "bool"    },
     { header: "Competition Details",        key: "competition_details",     type: "text"    },
@@ -892,44 +1017,28 @@ function exportCSV() {
     { header: "Confirmation Email Sent",    key: "email_sent",              type: "bool"    },
   ];
 
-  // ── Value formatter ─────────────────────────────────────────────────────────
   function csvFormat(val, type) {
     if (val === null || val === undefined || val === "") return "";
     if (type === "bool") {
-      if (val === true  || val === "true"  || val === 1 || val === "yes") return "Yes";
-      if (val === false || val === "false" || val === 0 || val === "no")  return "No";
+      if (val === true || val === "true" || val === 1 || val === "yes") return "Yes";
+      if (val === false || val === "false" || val === 0 || val === "no") return "No";
       return String(val);
     }
     if (type === "array") {
-      if (Array.isArray(val)) return val.join(", ");
-      try {
-        const parsed = JSON.parse(val);
-        if (Array.isArray(parsed)) return parsed.join(", ");
-      } catch (_) {}
-      return String(val).replace(/[\[\]"]/g, "");
+      const arr = parseArrayField(val);
+      return arr.join(", ");
     }
     if (type === "date") {
-      try {
-        const d = new Date(val);
-        const day  = String(d.getDate()).padStart(2, "0");
-        const mon  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
-        const yr   = d.getFullYear();
-        const hh   = String(d.getHours()).padStart(2, "0");
-        const mm   = String(d.getMinutes()).padStart(2, "0");
-        return `${day} ${mon} ${yr}, ${hh}:${mm}`;
-      } catch (_) { return String(val); }
+      return fmtDate(val);
     }
     return String(val);
   }
 
-  // ── Build CSV ───────────────────────────────────────────────────────────────
   const csvEsc = (v) => `"${String(v).replace(/"/g, '""')}"`;
-
   let csvContent = CSV_COLUMNS.map(c => csvEsc(c.header)).join(",") + "\n";
 
-  rows.forEach((row) => {
+  filtered.forEach((row) => {
     const rowValues = CSV_COLUMNS.map(({ key, type }) => {
-      // Fallback aliases for enrollment number field
       let val = row[key];
       if (key === "enrollment_number" && (val === null || val === undefined || val === "")) {
         val = row["enrollment_id"] || row["enrollment_no"] || "";
@@ -942,20 +1051,17 @@ function exportCSV() {
   const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-
   const timestamp = new Date().toISOString().slice(0, 10);
   link.setAttribute("href", url);
   link.setAttribute("download", `SSC2027_Registrations_${timestamp}.csv`);
   link.style.visibility = "hidden";
-
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
-// ───────────────────────────────────────────────────────────────
-// Backup JSON
-// ───────────────────────────────────────────────────────────────
+// Backup JSON (Loaded client cache)
 function backupJSON() {
   if (ALL_ROWS.length === 0) {
     alert("No data to back up.");
@@ -963,6 +1069,7 @@ function backupJSON() {
   }
   const payload = {
     exported_at: new Date().toISOString(),
+    table_source: ACTIVE_TABLE,
     total_records: ALL_ROWS.length,
     records: ALL_ROWS,
   };
@@ -981,8 +1088,167 @@ function backupJSON() {
 }
 
 // ───────────────────────────────────────────────────────────────
-// Delete All Data — with type-DELETE confirmation gate
+// Supabase Immutable Backup Snapshot Modal & Download Logic
 // ───────────────────────────────────────────────────────────────
+function showSupabaseBackupModal() {
+  const modal = $("#supabaseBackupModal");
+  const statusEl = $("#backupDownloadStatus");
+  if (statusEl) statusEl.textContent = "";
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  gsap.fromTo(modal.querySelector(".modal-card"),
+    { scale: 0.92, opacity: 0, y: 20 },
+    { duration: 0.3, scale: 1, opacity: 1, y: 0, ease: "power3.out" }
+  );
+}
+
+function closeSupabaseBackupModal() {
+  const modal = $("#supabaseBackupModal");
+  if (!modal) return;
+  gsap.to(modal.querySelector(".modal-card"), {
+    duration: 0.2, scale: 0.92, opacity: 0, y: 10, ease: "power2.in",
+    onComplete: () => modal.classList.add("hidden")
+  });
+}
+
+// Download Complete Snapshot directly from Supabase public.registrations_backup
+async function downloadSupabaseBackup(format = "json") {
+  const statusEl = $("#backupDownloadStatus");
+  if (statusEl) {
+    statusEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;color:#0284c7;"><svg class="spin" viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Fetching immutable snapshot from public.registrations_backup...</span>`;
+  }
+
+  try {
+    const r = await fetch("/api/entries?source=backup&limit=10000", {
+      headers: { "x-admin-key": getKey() }
+    });
+
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP error ${r.status}`);
+    }
+
+    const data = await r.json();
+    const rows = data.rows || [];
+
+    if (rows.length === 0) {
+      if (statusEl) statusEl.textContent = "Backup table is currently empty.";
+      return;
+    }
+
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    if (format === "json") {
+      const payload = {
+        source_table: "public.registrations_backup",
+        exported_at: new Date().toISOString(),
+        total_records: rows.length,
+        is_immutable_archive: true,
+        records: rows
+      };
+      const json = JSON.stringify(payload, null, 2);
+      const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `SSC2027_Supabase_Backup_Archive_${timestamp}.json`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else if (format === "csv") {
+      const CSV_COLUMNS = [
+        { header: "Timestamp",                  key: "created_at",             type: "date"    },
+        { header: "Full Name",                  key: "full_name",               type: "text"    },
+        { header: "Primary Email",              key: "email",                   type: "text"    },
+        { header: "WhatsApp / Phone",           key: "contact_number",          type: "text"    },
+        { header: "Faculty / Institute",        key: "faculty_institute",       type: "text"    },
+        { header: "Programme / Course",         key: "programme_course",        type: "text"    },
+        { header: "Semester / Year",            key: "current_semester_year",   type: "text"    },
+        { header: "Division / Batch",           key: "division_batch",          type: "text"    },
+        { header: "Enrollment Number",          key: "enrollment_number",       type: "text"    },
+        { header: "Has University Email",       key: "has_uni_email",           type: "bool"    },
+        { header: "University Email",           key: "uni_email",               type: "text"    },
+        { header: "Personal Email",             key: "personal_email",          type: "text"    },
+        { header: "Student Status",             key: "student_status",          type: "text"    },
+        { header: "Why Interested",             key: "why_interested",          type: "text"    },
+        { header: "Has App Idea",               key: "has_idea",                type: "text"    },
+        { header: "App Idea Description",       key: "idea_description",        type: "text"    },
+        { header: "Excitement Areas",           key: "excitement_level",        type: "array"   },
+        { header: "Build Interest Areas",       key: "build_interest",          type: "array"   },
+        { header: "Mac / iPad Access",          key: "mac_access",              type: "text"    },
+        { header: "Device Usage Frequency",     key: "device_frequency",        type: "text"    },
+        { header: "Mac Lab Needed",             key: "needs_mac_lab",           type: "text"    },
+        { header: "Prep Hours / Week",          key: "hours_per_week_prep",     type: "text"    },
+        { header: "App Dev Experience",         key: "app_experience",          type: "text"    },
+        { header: "Apple Platform Experience",  key: "apple_experience",        type: "text"    },
+        { header: "Independence / Confidence",  key: "independence_confidence", type: "text"    },
+        { header: "Skills / Interests",         key: "interests_improving",     type: "array"   },
+        { header: "Previous Competitions",      key: "previous_competitions",   type: "bool"    },
+        { header: "Competition Details",        key: "competition_details",     type: "text"    },
+        { header: "Commitment Level",           key: "commitment_level",        type: "text"    },
+        { header: "Program Hours / Week",       key: "hours_per_week_program",  type: "text"    },
+        { header: "Preferred Work Schedule",    key: "work_schedule",           type: "array"   },
+        { header: "Willing to Attend Sessions", key: "willing_to_attend",       type: "text"    },
+        { header: "GitHub",                     key: "github_profile",          type: "text"    },
+        { header: "LinkedIn",                   key: "linkedin_profile",        type: "text"    },
+        { header: "Portfolio",                  key: "portfolio_website",       type: "text"    },
+        { header: "Additional Comments",        key: "anything_else",           type: "text"    },
+        { header: "Confirmation Email Sent",    key: "email_sent",              type: "bool"    },
+      ];
+
+      function csvFormat(val, type) {
+        if (val === null || val === undefined || val === "") return "";
+        if (type === "bool") {
+          if (val === true || val === "true" || val === 1 || val === "yes") return "Yes";
+          if (val === false || val === "false" || val === 0 || val === "no") return "No";
+          return String(val);
+        }
+        if (type === "array") {
+          const arr = parseArrayField(val);
+          return arr.join(", ");
+        }
+        if (type === "date") return fmtDate(val);
+        return String(val);
+      }
+
+      const csvEsc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+      let csvContent = CSV_COLUMNS.map(c => csvEsc(c.header)).join(",") + "\n";
+      rows.forEach((row) => {
+        const rowValues = CSV_COLUMNS.map(({ key, type }) => {
+          let val = row[key];
+          if (key === "enrollment_number" && (val === null || val === undefined || val === "")) {
+            val = row["enrollment_id"] || row["enrollment_no"] || "";
+          }
+          return csvEsc(csvFormat(val, type));
+        });
+        csvContent += rowValues.join(",") + "\n";
+      });
+
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `SSC2027_Supabase_Backup_Archive_${timestamp}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#10b981;font-weight:600;">✔ Downloaded ${rows.length} rows from registrations_backup (${format.toUpperCase()})</span>`;
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#ef4444;">Error: ${esc(err.message)}</span>`;
+    }
+  }
+}
+
+// Delete All Data Modal Handling
 function showDeleteModal() {
   const modal = $("#deleteModal");
   const input = $("#deleteConfirmInput");
@@ -993,7 +1259,6 @@ function showDeleteModal() {
   const stepLine = $("#deleteStepLine");
   const step2Dot = $("#deleteStep2Dot");
 
-  // Reset to Step 1
   input.value = "";
   if (pwInput) pwInput.value = "";
   confirmBtn.disabled = true;
@@ -1045,13 +1310,12 @@ async function confirmDeleteAll() {
     updateFacultyBreakdown([]);
     countEl.textContent = 0;
 
-    // Success toast
     const toast = document.createElement("div");
     toast.style.cssText = "position:fixed;bottom:28px;right:28px;background:#ef4444;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(239,68,68,0.4);";
-    toast.textContent = `✔ All registrations deleted successfully.`;
+    toast.textContent = `✔ All active registrations deleted. (Supabase registrations_backup table preserved).`;
     document.body.appendChild(toast);
     gsap.fromTo(toast, { opacity: 0, y: 20 }, { duration: 0.3, opacity: 1, y: 0 });
-    setTimeout(() => gsap.to(toast, { duration: 0.3, opacity: 0, y: 10, onComplete: () => toast.remove() }), 3500);
+    setTimeout(() => gsap.to(toast, { duration: 0.3, opacity: 0, y: 10, onComplete: () => toast.remove() }), 4000);
 
   } catch (err) {
     confirmBtn.disabled = false;
@@ -1061,14 +1325,13 @@ async function confirmDeleteAll() {
   }
 }
 
-// Helper Utilities
+// Helpers
 function fmtDate(dateVal) {
   if (!dateVal) return "N/A";
   try {
     const d = new Date(dateVal);
     if (isNaN(d.getTime())) return String(dateVal);
     
-    // Format: DD-MM-YYYY HH:MM
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const yyyy = d.getFullYear();
@@ -1080,20 +1343,23 @@ function fmtDate(dateVal) {
   }
 }
 
-function esc(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+// Debounce Utility for Fast Search
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }
 
 // Single Page Application View Switcher
 function switchPage(pageId) {
   if (pageId === ACTIVE_PAGE) return;
   
-  // Highlight active nav tab
   $$(".nav-tab").forEach(tab => {
     if (tab.getAttribute("data-page") === pageId) {
       tab.classList.add("active");
@@ -1111,42 +1377,48 @@ function switchPage(pageId) {
   const tl = gsap.timeline();
   
   tl.to(currentDiv, {
-    duration: 0.25,
+    duration: 0.2,
     opacity: 0,
-    y: 15,
+    y: 10,
     ease: "power2.in",
     onComplete: () => {
       currentDiv.classList.add("hidden");
       targetDiv.classList.remove("hidden");
       
-      // Update department state filters
       if (pageId === "ideas") {
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = "ideas";
+        ACTIVE_TABLE = "registrations";
       } else if (pageId === "uni-mail") {
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = "uni-mail";
+        ACTIVE_TABLE = "registrations";
       } else if (pageId === "personal-mail") {
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = "personal-mail";
+        ACTIVE_TABLE = "registrations";
+      } else if (pageId === "backup-archive") {
+        ACTIVE_SEGMENT = null;
+        ACTIVE_DEPARTMENT = null;
+        ACTIVE_TABLE = "registrations_backup";
       } else if (pageId === "all") {
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = null;
+        ACTIVE_TABLE = "registrations";
       }
       
-      // Force table refresh
       if (pageId !== "dashboard") {
-        searchEl.value = ""; // reset search box
+        searchEl.value = "";
+        CURRENT_PAGE = 1;
         updateFilterNote();
-        renderTable("");
-        renderSegments(ALL_ROWS);
+        load(true); // Load table according to ACTIVE_TABLE
       }
     }
   });
   
   tl.fromTo(targetDiv,
-    { opacity: 0, y: 15 },
-    { duration: 0.4, opacity: 1, y: 0, ease: "power2.out" }
+    { opacity: 0, y: 10 },
+    { duration: 0.35, opacity: 1, y: 0, ease: "power2.out" }
   );
   
   ACTIVE_PAGE = pageId;
@@ -1154,22 +1426,54 @@ function switchPage(pageId) {
 
 // Event Bindings and Bootstrapping
 function init() {
-  // Gate authentication trigger
   gateBtn.addEventListener("click", tryUnlock);
   gateInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") tryUnlock();
   });
 
-  // Topbar Controls
   logoutBtn.addEventListener("click", logout);
-  refreshBtn.addEventListener("click", () => load());
+  
+  // Direct live sync buttons
+  const topbarSyncBtn = $("#topbarSyncBtn");
+  if (topbarSyncBtn) topbarSyncBtn.addEventListener("click", () => load(false, true));
+
+  const overviewRefreshBtn = $("#overviewRefreshBtn");
+  if (overviewRefreshBtn) overviewRefreshBtn.addEventListener("click", () => load(false, true));
+
+  if (refreshBtn) refreshBtn.addEventListener("click", () => load(false, true));
   exportBtn.addEventListener("click", exportCSV);
 
-  // Backup JSON button
   const backupBtn = $("#backupBtn");
   if (backupBtn) backupBtn.addEventListener("click", backupJSON);
 
-  // Delete All button + 2-step modal wiring
+  // Supabase Backup Snapshot Modal triggers
+  const supabaseSnapshotBtn = $("#supabaseSnapshotBtn");
+  if (supabaseSnapshotBtn) supabaseSnapshotBtn.addEventListener("click", showSupabaseBackupModal);
+
+  const backupModalCloseBtn = $("#backupModalCloseBtn");
+  if (backupModalCloseBtn) backupModalCloseBtn.addEventListener("click", closeSupabaseBackupModal);
+
+  const downloadBackupJsonBtn = $("#downloadBackupJsonBtn");
+  if (downloadBackupJsonBtn) downloadBackupJsonBtn.addEventListener("click", () => downloadSupabaseBackup("json"));
+
+  const downloadBackupCsvBtn = $("#downloadBackupCsvBtn");
+  if (downloadBackupCsvBtn) downloadBackupCsvBtn.addEventListener("click", () => downloadSupabaseBackup("csv"));
+
+  const viewBackupArchiveBtn = $("#viewBackupArchiveBtn");
+  if (viewBackupArchiveBtn) {
+    viewBackupArchiveBtn.addEventListener("click", () => {
+      closeSupabaseBackupModal();
+      switchPage("backup-archive");
+    });
+  }
+
+  const supabaseBackupModal = $("#supabaseBackupModal");
+  if (supabaseBackupModal) {
+    supabaseBackupModal.addEventListener("click", (e) => {
+      if (e.target === supabaseBackupModal) closeSupabaseBackupModal();
+    });
+  }
+
   const deleteAllBtn = $("#deleteAllBtn");
   if (deleteAllBtn) deleteAllBtn.addEventListener("click", showDeleteModal);
 
@@ -1183,14 +1487,12 @@ function init() {
   const deleteStepLine = $("#deleteStepLine");
   const deleteStep2Dot = $("#deleteStep2Dot");
 
-  // Step 1 — typing DELETE reveals Step 2
   if (deleteConfirmInput) {
     deleteConfirmInput.addEventListener("input", () => {
       const isDeleteTyped = deleteConfirmInput.value.trim() === "DELETE";
       $("#deleteConfirmError").style.display = "none";
 
       if (isDeleteTyped) {
-        // Animate progress bar to 100% and reveal Step 2
         deleteStepLine.style.width = "100%";
         deleteStep2Dot.style.background = "#ef4444";
         deleteStep2Dot.style.border = "none";
@@ -1219,7 +1521,6 @@ function init() {
     });
   }
 
-  // Step 2 — password must match stored admin key
   if (deletePasswordInput) {
     deletePasswordInput.addEventListener("input", () => {
       const isDeleteTyped = deleteConfirmInput.value.trim() === "DELETE";
@@ -1238,13 +1539,10 @@ function init() {
 
   if (deleteConfirmBtn) deleteConfirmBtn.addEventListener("click", confirmDeleteAll);
 
-  // Close delete modal on overlay click
   $("#deleteModal").addEventListener("click", (e) => {
     if (e.target === $("#deleteModal")) closeDeleteModal();
   });
 
-
-  // Navigation Links Click Events
   $$(".nav-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       const page = tab.getAttribute("data-page");
@@ -1252,7 +1550,6 @@ function init() {
     });
   });
 
-  // Dashboard Department Cards Click Events
   $$(".dept-link-card").forEach((card) => {
     card.addEventListener("click", () => {
       const targetDept = card.getAttribute("data-target-dept");
@@ -1260,13 +1557,15 @@ function init() {
     });
   });
 
-  // Search Engine input
-  searchEl.addEventListener("input", (e) => renderTable(e.target.value));
+  // Debounced search for instant, lag-free typing across thousands of records
+  const debouncedSearch = debounce((val) => {
+    CURRENT_PAGE = 1;
+    renderTable(val);
+  }, 120);
 
-  // Email Queue dispatch trigger
+  searchEl.addEventListener("input", (e) => debouncedSearch(e.target.value));
+
   startDispatchBtn.addEventListener("click", startDispatch);
-
-  // Modal actions (Disabled, using inline collapsible rows)
 
   // Check sessionStorage on page mount
   const activeKey = getKey();
@@ -1279,7 +1578,6 @@ function init() {
   }
 }
 
-// DOM Ready initialization
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {

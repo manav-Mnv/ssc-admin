@@ -4,7 +4,9 @@
   "description": "Swift Student Challenge Admin Portal",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test/audit-stress-security.test.js",
+    "send:confirmations": "node scripts/send-confirmations.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.8",
