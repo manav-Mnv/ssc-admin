@@ -1596,9 +1596,39 @@ function init() {
     if (e.target === $("#deleteModal")) closeDeleteModal();
   });
 
+  // Mobile Sidebar Drawer Controls
+  const mobileMenuBtn = $("#mobileMenuBtn");
+  const adminSidebar = $("#adminSidebar");
+  const sidebarOverlay = $("#sidebarOverlay");
+
+  function openMobileSidebar() {
+    if (adminSidebar) adminSidebar.classList.add("open");
+    if (sidebarOverlay) sidebarOverlay.classList.add("active");
+  }
+
+  function closeMobileSidebar() {
+    if (adminSidebar) adminSidebar.classList.remove("open");
+    if (sidebarOverlay) sidebarOverlay.classList.remove("active");
+  }
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", () => {
+      if (adminSidebar && adminSidebar.classList.contains("open")) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+    });
+  }
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", closeMobileSidebar);
+  }
+
   $$(".nav-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       const page = tab.getAttribute("data-page");
+      closeMobileSidebar();
       switchPage(page);
     });
   });
@@ -1606,6 +1636,7 @@ function init() {
   $$(".dept-link-card").forEach((card) => {
     card.addEventListener("click", () => {
       const targetDept = card.getAttribute("data-target-dept");
+      closeMobileSidebar();
       switchPage(targetDept);
     });
   });
