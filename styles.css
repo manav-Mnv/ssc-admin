@@ -596,11 +596,11 @@ html, body {
 .admin-main-content {
   flex: 1;
   min-width: 0;
-  padding: 30px 32px;
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 1380px;
+  gap: 20px;
+  max-width: 100%;
   width: 100%;
 }
 
@@ -883,18 +883,41 @@ html, body {
   color: var(--swift);
 }
 
-/* --- Table Card --- */
+/* --- Table Card & Container --- */
 .table-card {
-  padding: 8px;
+  padding: 0;
   overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
 }
 .table-wrap {
-  overflow-x: auto;
-  border-radius: var(--radius-md);
-  min-height: 200px;
-  max-height: 600px;
+  min-height: 160px;
   position: relative;
 }
+.table-scroll-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(240, 81, 56, 0.3) rgba(0, 0, 0, 0.04);
+}
+.table-scroll-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+.table-scroll-wrap::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 99px;
+}
+.table-scroll-wrap::-webkit-scrollbar-thumb {
+  background: rgba(240, 81, 56, 0.25);
+  border-radius: 99px;
+}
+.table-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(240, 81, 56, 0.45);
+}
+
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -920,52 +943,144 @@ table.entries {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   text-align: left;
-  min-width: 900px;
+  min-width: 1100px;
 }
 table.entries thead th {
-  padding: 16px 20px;
+  padding: 14px 18px;
   font-weight: 700;
   font-size: 11px;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-light);
-  background: #f1f5f9;
+  background: #f8fafc;
   position: sticky;
   top: 0;
   z-index: 5;
+  white-space: nowrap;
 }
 table.entries tbody td {
-  padding: 14px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-light);
   color: var(--text-primary);
   vertical-align: middle;
+  white-space: nowrap;
 }
 table.entries tbody tr.row {
   cursor: pointer;
-  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.15s ease;
 }
 table.entries tbody tr.row:hover {
-  background-color: rgba(15, 23, 42, 0.02);
+  background-color: rgba(240, 81, 56, 0.02);
 }
 table.entries tbody tr:last-child td {
   border-bottom: none;
 }
 
 .name-cell {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
 }
 .email-cell {
   color: var(--text-secondary);
   font-size: 13px;
 }
 .enrollment-cell {
-  font-family: monospace;
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* --- Polished Pagination Bar --- */
+.pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-light);
+  background: #f8fafc;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.pagination-info {
+  font-size: 13px;
   color: var(--text-secondary);
+}
+.pagination-info strong {
+  color: var(--text-primary);
+}
+.pagination-size-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.page-size-select {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
   font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.page-size-select:focus,
+.page-size-select:hover {
+  border-color: var(--swift);
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.page-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.page-btn:hover:not(:disabled) {
+  background: rgba(240, 81, 56, 0.08);
+  border-color: var(--swift);
+  color: var(--swift);
+  transform: translateY(-1px);
+}
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #f1f5f9;
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+.page-indicator-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0 6px;
+  white-space: nowrap;
 }
 .faculty-pill {
   display: inline-flex;

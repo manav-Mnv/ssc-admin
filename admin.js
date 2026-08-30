@@ -544,26 +544,27 @@ function renderTable(query) {
   const pageRows = filtered.slice(startIndex, endIndex);
 
   let html = `
-    <table class="entries">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Faculty</th>
-          <th>Programme</th>
-          <th>Sem</th>
-          <th>Email Type</th>
-          <th>Enrollment No.</th>
-          <th>Mac Access</th>
-          <th>App Idea</th>
-          <th>Submitted</th>
-          <th>Email Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="table-scroll-wrap">
+      <table class="entries">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Faculty</th>
+            <th>Programme</th>
+            <th>Sem</th>
+            <th>Email Type</th>
+            <th>Enrollment No.</th>
+            <th>Mac Access</th>
+            <th>App Idea</th>
+            <th>Submitted</th>
+            <th>Email Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
   `;
 
   pageRows.forEach((r) => {
@@ -593,15 +594,15 @@ function renderTable(query) {
       <tr class="row" data-id="${esc(r.id || idx)}">
         <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
         <td class="name-cell">${esc(r.full_name || "N/A")}</td>
-        <td class="email-cell" style="font-size:12.5px;">${esc(r.email || "N/A")}</td>
+        <td class="email-cell">${esc(r.email || "N/A")}</td>
         <td style="font-size:12.5px;letter-spacing:0.3px;">${esc(r.contact_number || "—")}</td>
         <td><span class="${facClass}">${esc(r.faculty_institute || "Other")}</span></td>
-        <td style="font-size:12px;">${esc(r.programme_course || "—")}</td>
-        <td style="text-align:center;font-size:12px;">${esc(String(r.current_semester_year || "—"))}</td>
+        <td style="font-size:12.5px;">${esc(r.programme_course || "—")}</td>
+        <td style="text-align:center;font-size:12.5px;">${esc(String(r.current_semester_year || "—"))}</td>
         <td>${emailTypeBadge}</td>
         <td class="enrollment-cell">${esc(r.enrollment_number || r.enrollment_id || "—")}</td>
         <td style="font-size:12px;">${esc(macLabel)}</td>
-        <td style="font-size:12px;max-width:160px;overflow:hidden;">${ideaPreview}</td>
+        <td style="font-size:12px;max-width:180px;overflow:hidden;">${ideaPreview}</td>
         <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">${esc(dateStr)}</td>
         <td>
           <span class="status-indicator ${isSent ? 'sent' : 'unsent'}">
@@ -615,8 +616,9 @@ function renderTable(query) {
   });
 
   html += `
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   `;
 
   // Pagination Footer Bar
@@ -638,7 +640,7 @@ function renderTable(query) {
       <div class="pagination-controls">
         <button class="page-btn" id="firstPageBtn" ${CURRENT_PAGE === 1 ? 'disabled' : ''} title="First Page">«</button>
         <button class="page-btn" id="prevPageBtn" ${CURRENT_PAGE === 1 ? 'disabled' : ''} title="Previous Page">‹</button>
-        <span style="font-size:12.5px;font-weight:600;padding:0 8px;">Page ${CURRENT_PAGE} of ${totalPages}</span>
+        <span class="page-indicator-text">Page ${CURRENT_PAGE} of ${totalPages}</span>
         <button class="page-btn" id="nextPageBtn" ${CURRENT_PAGE === totalPages ? 'disabled' : ''} title="Next Page">›</button>
         <button class="page-btn" id="lastPageBtn" ${CURRENT_PAGE === totalPages ? 'disabled' : ''} title="Last Page">»</button>
       </div>
