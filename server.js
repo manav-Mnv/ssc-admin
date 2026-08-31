@@ -67,12 +67,23 @@ app.use((req, res) => {
 });
 
 if (require.main === module) {
+  const os = require("os");
   app.listen(PORT, HOST, () => {
     console.log(`====================================================`);
     console.log(`🚀 SSC Admin Portal Server is Live!`);
     console.log(`----------------------------------------------------`);
-    console.log(`👉 Local Access URL:   http://localhost:${PORT}`);
-    console.log(`👉 Loopback IP URL:    http://127.0.0.1:${PORT}`);
+    console.log(`👉 Local (This PC):    http://localhost:${PORT}`);
+    console.log(`👉 Local Loopback:     http://127.0.0.1:${PORT}`);
+    
+    // Auto-discover Wi-Fi and LAN IPs for easy device access
+    const ifaces = os.networkInterfaces();
+    for (const name in ifaces) {
+      for (const net of ifaces[name]) {
+        if (net.family === "IPv4" && !net.internal) {
+          console.log(`📱 Network (${name}): http://${net.address}:${PORT}`);
+        }
+      }
+    }
     console.log(`====================================================`);
   });
 }

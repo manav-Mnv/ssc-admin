@@ -3,7 +3,8 @@ const crypto = require("crypto");
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ADMIN_KEY = process.env.ADMIN_KEY;
+const ADMIN_KEY = process.env.ADMIN_KEY || "sscpu";
+const SUPER_ADMIN_KEY = process.env.SUPER_ADMIN_KEY || "applessc";
 
 function isAuthorized(reqAdminKey, configuredKey) {
   if (!configuredKey || typeof reqAdminKey !== "string" || !reqAdminKey) return false;
@@ -19,8 +20,20 @@ module.exports = async function handler(req, res) {
   }
 
   const clientKey = req.headers["x-admin-key"] || req.query.key;
-  if (!ADMIN_KEY || !isAuthorized(clientKey, ADMIN_KEY)) {
-    res.status(401).json({ error: "Unauthorized: Invalid or missing admin key" });
+  if (!clientKey) {
+    res.status(401).json({ error: "Unauthorized: Missing authentication passcode" });
+    return;
+  }
+
+  // If standard admin key is passed, reject with 403 Forbidden
+  if (isAuthorized(clientKey, ADMIN_KEY) && !isAuthorized(clientKey, SUPER_ADMIN_KEY)) {
+    res.status(403).json({ error: "Forbidden: Deleting all registrations requires Super Admin privileges." });
+    return;
+  }
+
+  // Super Admin validation
+  if (!isAuthorized(clientKey, SUPER_ADMIN_KEY)) {
+    res.status(401).json({ error: "Unauthorized: Invalid Super Admin passcode." });
     return;
   }
 

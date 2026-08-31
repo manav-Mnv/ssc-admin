@@ -8,31 +8,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- GSAP CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body>
 
-  <!-- Animated Glowing background accents -->
-  <div class="bg-glow g1"></div>
-  <div class="bg-glow g2"></div>
-  <div class="bg-glow g3"></div>
-
   <!-- Passcode Gate Overlay -->
   <div id="gate" class="gate">
     <div class="gate-card glass-card">
-      <div class="gate-mark-glow"></div>
       <div class="gate-mark">
         <img src="assets/swift-nav.png" class="swift-img" alt="Swift Logo">
       </div>
       <h2>AATCe Admin Access</h2>
-      <p class="gate-sub">Enter the admin passcode to unlock the SSC 2027 dashboard.</p>
+      <p class="gate-sub">Enter the admin passcode to access the SSC 2027 portal.</p>
       
       <div class="gate-input-wrapper">
         <input id="gateInput" type="password" class="field" placeholder="Enter Passcode" autocomplete="off">
-        <div class="input-focus-line"></div>
       </div>
       
       <button id="gateBtn" class="btn btn-primary">
@@ -44,9 +35,9 @@
   </div>
 
   <!-- Mobile Header (Visible on small screens) -->
-  <header class="mobile-topbar glass-card">
+  <header class="mobile-topbar">
     <button id="mobileMenuBtn" class="mobile-menu-toggle" aria-label="Toggle navigation menu">
-      <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="3" y1="6" x2="21" y2="6"></line>
         <line x1="3" y1="12" x2="21" y2="12"></line>
         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -65,7 +56,7 @@
   <!-- Main Application Wrapper with Vertical Sidebar Layout -->
   <div id="app" class="app-layout hidden">
     <!-- Left Vertical Sidebar -->
-    <aside id="adminSidebar" class="admin-sidebar glass-card">
+    <aside id="adminSidebar" class="admin-sidebar">
       <!-- Sidebar Header / Brand -->
       <div class="sidebar-header">
         <div class="sidebar-brand">
@@ -87,14 +78,14 @@
             <span class="live-text">Supabase Live</span>
           </div>
           <button id="topbarSyncBtn" class="btn-icon-sync" title="Sync live with Supabase">
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="spin-hover">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
             </svg>
           </button>
         </div>
         <div class="sidebar-count-display">
           <span id="count" class="sidebar-count-num">0</span>
-          <span class="sidebar-count-label">registrations loaded</span>
+          <span class="sidebar-count-label">registrations</span>
         </div>
       </div>
 
@@ -131,14 +122,14 @@
         </div>
 
         <!-- Group 3: Archives & External Tools -->
-        <div class="nav-group">
-          <div class="nav-group-title">Archives & Data Tools</div>
-          <button class="nav-tab" data-page="backup-archive">
+        <div class="nav-group" id="navGroupArchives">
+          <div class="nav-group-title">Archives & Tools</div>
+          <button class="nav-tab" id="navTabBackupArchive" data-page="backup-archive">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span>Backup Archive (Immutable)</span>
+            <span>Backup Archive</span>
           </button>
           <a href="https://docs.google.com/spreadsheets/d/1OPPBeqP1JLSoiN9RUOuJgd_TbjA_80HSEVrIXL-Cpsw/edit?usp=drive_web" target="_blank" rel="noopener noreferrer" class="sidebar-ext-link">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#16a34a" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#10b981" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             <span>Google Sheet ↗</span>
           </a>
         </div>
@@ -146,13 +137,13 @@
 
       <!-- Sidebar Footer -->
       <div class="sidebar-footer">
-        <div class="sidebar-user-card">
-          <div class="sidebar-user-avatar">
+        <div class="sidebar-user-card" id="sidebarUserCard">
+          <div class="sidebar-user-avatar" id="sidebarUserAvatar">
             <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </div>
           <div class="sidebar-user-info">
             <span class="sidebar-user-name">Parul University</span>
-            <span class="sidebar-user-role">AATCe Admin</span>
+            <span class="sidebar-user-role" id="sidebarUserRole">AATCe Admin</span>
           </div>
         </div>
         <button id="logoutBtn" class="btn-sidebar-logout" title="Disconnect admin session">
@@ -165,248 +156,253 @@
     <!-- Main Right Content Workspace Area -->
     <main class="admin-main-content">
 
-    <!-- Page 1: Overview Dashboard -->
-    <div id="page-dashboard" class="page-view">
-      <!-- Live Sync Status Banner -->
-      <section class="glass-card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;margin-bottom:18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);padding:4px 10px;border-radius:20px;border:1px solid rgba(16,185,129,0.3);">
-            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
-            <span style="font-size:12px;font-weight:600;color:#10b981;">Supabase Live</span>
+      <!-- Page 1: Overview Dashboard -->
+      <div id="page-dashboard" class="page-view">
+        <!-- Live Sync Status Banner -->
+        <section class="sync-banner">
+          <div class="sync-banner-left">
+            <div class="sync-status-badge">
+              <span class="sync-dot"></span>
+              <span>Supabase Live</span>
+            </div>
+            <span id="lastSyncedTime" class="sync-timestamp">Last updated: Checking...</span>
           </div>
-          <span id="lastSyncedTime" style="font-size:12.5px;color:var(--text-secondary);">Last updated: Checking...</span>
-        </div>
-        <button id="overviewRefreshBtn" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:6px;border-color:rgba(56,189,248,0.3);color:#38bdf8;">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="spin-hover"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          <span>Sync & Refresh Data</span>
-        </button>
-      </section>
+          <button id="overviewRefreshBtn" class="btn btn-secondary btn-sm">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>Sync Data</span>
+          </button>
+        </section>
 
-      <!-- Metrics Stats Grid -->
-      <section class="stats-grid">
-        <div class="stat-card glass-card">
-          <div class="stat-icon-wrapper blue">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <!-- Metrics Stats Grid -->
+        <section class="stats-grid">
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrapper blue">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Total Registrations</div>
+              <div class="stat-num" id="statTotal">0</div>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-label">Total Registrations</div>
-            <div class="stat-num" id="statTotal">0</div>
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrapper orange">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Email Sent Progress</div>
+              <div class="stat-num" id="statEmailProgress">0%</div>
+              <div class="stat-sub" id="statEmailRatio">0 / 0 sent</div>
+            </div>
           </div>
-        </div>
-        <div class="stat-card glass-card">
-          <div class="stat-icon-wrapper orange">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <div class="stat-card glass-card dept-link-card" data-target-dept="uni-mail">
+            <div class="stat-icon-wrapper purple">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">University Mail</div>
+              <div class="stat-num" id="statUniMail">0</div>
+              <div class="stat-sub">@paruluniversity.ac.in ↗</div>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-label">Email Sent Progress</div>
-            <div class="stat-num" id="statEmailProgress">0%</div>
-            <div class="stat-sub" id="statEmailRatio">0 / 0 sent</div>
+          <div class="stat-card glass-card dept-link-card" data-target-dept="personal-mail">
+            <div class="stat-icon-wrapper green">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Personal Mail</div>
+              <div class="stat-num" id="statPersonalMail">0</div>
+              <div class="stat-sub">Gmail, Yahoo & others ↗</div>
+            </div>
           </div>
-        </div>
-        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="uni-mail">
-          <div class="stat-icon-wrapper purple">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">University Mail</div>
-            <div class="stat-num" id="statUniMail">0</div>
-            <div class="stat-sub">Official @paruluniversity.ac.in ↗</div>
-          </div>
-        </div>
-        <div class="stat-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="personal-mail">
-          <div class="stat-icon-wrapper green">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">Personal Mail</div>
-            <div class="stat-num" id="statPersonalMail">0</div>
-            <div class="stat-sub">Gmail, Yahoo & others ↗</div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Email Queue Manager & Dispatcher -->
-      <section class="queue-manager glass-card">
-        <div class="queue-header">
-          <div class="queue-title-wrap">
-            <span class="badge badge-amber">Email System</span>
-            <h2>Automated Queue Dispatcher</h2>
-            <p class="queue-desc">Serverless timeout work-around: dispatches verification/acknowledgment emails in batches of 5. Keep this tab open during execution.</p>
-          </div>
-          <div class="queue-controls">
-            <div class="queue-status" id="queueStatusText">Ready to dispatch (0 pending)</div>
-            <button id="startDispatchBtn" class="btn btn-primary btn-glow" disabled>
-              <span>Start Dispatch</span>
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            </button>
-          </div>
-        </div>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div id="queueProgressFill" class="progress-fill" style="width: 0%"></div>
-          </div>
-          <div class="progress-stats">
-            <span id="queueProgressPct">0% processed</span>
-            <span id="queueProgressCount">0 / 0 emails sent</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Faculty & Department Breakdown Dashboard Grid -->
-      <section class="faculty-breakdown-grid" style="grid-template-columns: repeat(4, 1fr);">
-        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="ideas">
-          <div class="dept-header">
-            <div class="dept-title-wrap">
-              <span class="dept-icon idea" style="background:rgba(240,81,56,0.1);color:#f05138;border:1px solid rgba(240,81,56,0.2);">ID</span>
-              <h3>App Idea Submissions ↗</h3>
+        <!-- Email Queue Manager & Dispatcher -->
+        <section class="queue-manager glass-card" id="queueManagerCard">
+          <div class="queue-header">
+            <div class="queue-title-wrap">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                <span class="badge badge-amber">Email Queue</span>
+                <span id="queueRoleLockBadge" class="badge badge-role-locked hidden">🔒 Super Admin Required</span>
+              </div>
+              <h2>Automated Queue Dispatcher</h2>
+              <p class="queue-desc">Dispatches verification & acknowledgment emails in batches of 5. Keep this tab open during execution.</p>
             </div>
-            <div class="dept-count-badge" id="deptIdeasCount">0</div>
-          </div>
-          <p class="dept-description">Submissions with App Playground descriptions</p>
-          <div class="dept-progress-container">
-            <div class="dept-progress-bar">
-              <div id="deptIdeasProgress" class="dept-progress-fill piet" style="width: 0%; background: linear-gradient(135deg, #f05138 0%, #ea580c 100%);"></div>
-            </div>
-            <div class="dept-progress-label" id="deptIdeasPct">0% of total</div>
-          </div>
-        </div>
-
-        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="uni-mail">
-          <div class="dept-header">
-            <div class="dept-title-wrap">
-              <span class="dept-icon piet">UN</span>
-              <h3>University Mail ↗</h3>
-            </div>
-            <div class="dept-count-badge" id="deptPietCount">0</div>
-          </div>
-          <p class="dept-description">Official Parul University email registrations</p>
-          <div class="dept-progress-container">
-            <div class="dept-progress-bar">
-              <div id="deptPietProgress" class="dept-progress-fill piet" style="width: 0%"></div>
-            </div>
-            <div class="dept-progress-label" id="deptPietPct">0% of total</div>
-          </div>
-        </div>
-        
-        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="personal-mail">
-          <div class="dept-header">
-            <div class="dept-title-wrap">
-              <span class="dept-icon pit">PR</span>
-              <h3>Personal Mail ↗</h3>
-            </div>
-            <div class="dept-count-badge" id="deptPitCount">0</div>
-          </div>
-          <p class="dept-description">Personal email registrations (Gmail, Yahoo, etc.)</p>
-          <div class="dept-progress-container">
-            <div class="dept-progress-bar">
-              <div id="deptPitProgress" class="dept-progress-fill pit" style="width: 0%"></div>
-            </div>
-            <div class="dept-progress-label" id="deptPitPct">0% of total</div>
-          </div>
-        </div>
-        
-        <div class="dept-card glass-card dept-link-card" style="cursor:pointer;" data-target-dept="all">
-          <div class="dept-header">
-            <div class="dept-title-wrap">
-              <span class="dept-icon other">AL</span>
-              <h3>Total Submissions ↗</h3>
-            </div>
-            <div class="dept-count-badge" id="deptOtherCount">0</div>
-          </div>
-          <p class="dept-description">Combined student registrations dashboard</p>
-          <div class="dept-progress-container">
-            <div class="dept-progress-bar">
-              <div id="deptOtherProgress" class="dept-progress-fill other" style="width: 0%"></div>
-            </div>
-            <div class="dept-progress-label" id="deptOtherPct">0% of total</div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Page 2: Detailed Registrations View -->
-    <div id="page-registrations" class="page-view hidden">
-      <!-- Table Filters and Search Control Bar -->
-      <section class="controls-card glass-card">
-        <!-- Table Mode Switcher Bar -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-light);flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Data Source:</span>
-            <div class="source-toggle-group" style="display:inline-flex;background:rgba(15,23,42,0.06);padding:3px;border-radius:8px;border:1px solid var(--border-light);">
-              <button id="toggleLiveTableBtn" class="source-toggle-btn active" style="border:none;background:#fff;color:var(--text-primary);font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:all 0.2s;">
-                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;"></span>
-                <span>Live Registrations</span>
-              </button>
-              <button id="toggleBackupTableBtn" class="source-toggle-btn" style="border:none;background:transparent;color:var(--text-secondary);font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;">
-                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0284c7;"></span>
-                <span>Backup Archive (Immutable)</span>
+            <div class="queue-controls">
+              <div class="queue-status" id="queueStatusText">Ready to dispatch (0 pending)</div>
+              <button id="startDispatchBtn" class="btn btn-primary" disabled>
+                <span>Start Dispatch</span>
+                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               </button>
             </div>
           </div>
-          <div id="sourceTableBadge" style="font-size:12px;color:var(--text-muted);">
-            Active Table: <code id="activeTableCode" style="background:rgba(16,185,129,0.1);color:#059669;padding:2px 6px;border-radius:4px;">public.registrations</code>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div id="queueProgressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-stats">
+              <span id="queueProgressPct">0% processed</span>
+              <span id="queueProgressCount">0 / 0 emails sent</span>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="controls-row">
-          <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input id="search" class="field bare" placeholder="Search name, email, enrollment ID, course, faculty...">
+        <!-- Faculty & Department Breakdown Dashboard Grid -->
+        <section class="faculty-breakdown-grid">
+          <div class="dept-card glass-card dept-link-card" data-target-dept="ideas">
+            <div class="dept-header">
+              <div class="dept-title-wrap">
+                <span class="dept-icon idea">ID</span>
+                <h3>App Ideas ↗</h3>
+              </div>
+              <div class="dept-count-badge" id="deptIdeasCount">0</div>
+            </div>
+            <p class="dept-description">Submissions with App Playground project descriptions</p>
+            <div class="dept-progress-container">
+              <div class="dept-progress-bar">
+                <div id="deptIdeasProgress" class="dept-progress-fill idea" style="width: 0%"></div>
+              </div>
+              <div class="dept-progress-label" id="deptIdeasPct">0% of total</div>
+            </div>
           </div>
-          <div class="control-actions">
-            <button id="refreshBtn" class="btn btn-secondary">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="spin-hover"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-              <span>Refresh</span>
-            </button>
-            <button id="exportBtn" class="btn btn-secondary">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              <span>Export CSV</span>
-            </button>
-            <a href="https://docs.google.com/spreadsheets/d/1OPPBeqP1JLSoiN9RUOuJgd_TbjA_80HSEVrIXL-Cpsw/edit?usp=drive_web" target="_blank" rel="noopener noreferrer" id="googleSheetBtn" class="btn btn-secondary" style="text-decoration:none;">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="#16a34a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              <span>Google Sheet ↗</span>
-            </a>
-            <button id="backupBtn" class="btn btn-secondary" title="Download loaded JSON backup">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Backup JSON</span>
-            </button>
-            <button id="supabaseSnapshotBtn" class="btn" style="background:rgba(56,189,248,0.12);color:#0284c7;border:1px solid rgba(56,189,248,0.35);" title="Download complete immutable snapshot from Supabase registrations_backup table">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="#0284c7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Supabase Backup Archive ▾</span>
-            </button>
-            <button id="deleteAllBtn" class="btn" style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);" title="Delete all registrations from database">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-              <span>Delete All</span>
-            </button>
-          </div>
-        </div>
-        
-        <!-- Segment Chips Filters -->
-        <div class="chips-container">
-          <span class="chips-label">Quick Filters:</span>
-          <div id="segmentChips" class="chips">
-            <!-- Dynamically inserted segment chips -->
-          </div>
-        </div>
-        <div id="activeFilterNote" class="filter-note hidden"></div>
-      </section>
 
-      <!-- Submissions Table Card -->
-      <section class="table-card glass-card">
-        <div id="tableWrap" class="table-wrap">
-          <div class="loading-state">
-            <div class="spinner"></div>
-            <p>Fetching registrations from Supabase...</p>
+          <div class="dept-card glass-card dept-link-card" data-target-dept="uni-mail">
+            <div class="dept-header">
+              <div class="dept-title-wrap">
+                <span class="dept-icon piet">UN</span>
+                <h3>University Mail ↗</h3>
+              </div>
+              <div class="dept-count-badge" id="deptPietCount">0</div>
+            </div>
+            <p class="dept-description">Official Parul University email registrations</p>
+            <div class="dept-progress-container">
+              <div class="dept-progress-bar">
+                <div id="deptPietProgress" class="dept-progress-fill piet" style="width: 0%"></div>
+              </div>
+              <div class="dept-progress-label" id="deptPietPct">0% of total</div>
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
+          
+          <div class="dept-card glass-card dept-link-card" data-target-dept="personal-mail">
+            <div class="dept-header">
+              <div class="dept-title-wrap">
+                <span class="dept-icon pit">PR</span>
+                <h3>Personal Mail ↗</h3>
+              </div>
+              <div class="dept-count-badge" id="deptPitCount">0</div>
+            </div>
+            <p class="dept-description">Personal email registrations (Gmail, Yahoo, etc.)</p>
+            <div class="dept-progress-container">
+              <div class="dept-progress-bar">
+                <div id="deptPitProgress" class="dept-progress-fill pit" style="width: 0%"></div>
+              </div>
+              <div class="dept-progress-label" id="deptPitPct">0% of total</div>
+            </div>
+          </div>
+          
+          <div class="dept-card glass-card dept-link-card" data-target-dept="all">
+            <div class="dept-header">
+              <div class="dept-title-wrap">
+                <span class="dept-icon other">AL</span>
+                <h3>Total Registrations ↗</h3>
+              </div>
+              <div class="dept-count-badge" id="deptOtherCount">0</div>
+            </div>
+            <p class="dept-description">Total submissions & confirmation rate</p>
+            <div class="dept-progress-container">
+              <div class="dept-progress-bar">
+                <div id="deptOtherProgress" class="dept-progress-fill other" style="width: 0%"></div>
+              </div>
+              <div class="dept-progress-label" id="deptOtherPct">0 of 0 confirmed (0%)</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Page 2: Detailed Registrations View -->
+      <div id="page-registrations" class="page-view hidden">
+        <!-- Table Filters and Search Control Bar -->
+        <section class="controls-card glass-card">
+          <!-- Table Mode Switcher Bar -->
+          <div id="sourceTableSwitcherRow" class="source-switcher-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Source:</span>
+              <div class="source-toggle-group">
+                <button id="toggleLiveTableBtn" class="source-toggle-btn active">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-emerald);"></span>
+                  <span>Live Registrations</span>
+                </button>
+                <button id="toggleBackupTableBtn" class="source-toggle-btn">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-sky);"></span>
+                  <span>Backup Archive</span>
+                </button>
+              </div>
+            </div>
+            <div id="sourceTableBadge" style="font-size:12px;color:var(--text-muted);">
+              Active: <code id="activeTableCode" style="background:var(--accent-emerald-subtle);color:var(--accent-emerald);padding:2px 6px;border-radius:4px;">public.registrations</code>
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <div class="search-box">
+              <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input id="search" class="field bare" placeholder="Search name, email, enrollment ID, course...">
+            </div>
+            <div class="control-actions">
+              <button id="refreshBtn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Refresh</span>
+              </button>
+              <button id="exportBtn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <span>Export CSV</span>
+              </button>
+              <a href="https://docs.google.com/spreadsheets/d/1OPPBeqP1JLSoiN9RUOuJgd_TbjA_80HSEVrIXL-Cpsw/edit?usp=drive_web" target="_blank" rel="noopener noreferrer" id="googleSheetBtn" class="btn btn-secondary" style="text-decoration:none;">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Google Sheet ↗</span>
+              </a>
+              <button id="backupBtn" class="btn btn-secondary" title="Download loaded JSON backup">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Backup JSON</span>
+              </button>
+              <button id="supabaseSnapshotBtn" class="btn btn-archive-action" title="Download immutable snapshot from Supabase registrations_backup table">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Backup Archive ▾</span>
+              </button>
+              <button id="deleteAllBtn" class="btn btn-delete-action" title="Delete all registrations from database">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                <span>Delete All</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Segment Chips Filters -->
+          <div class="chips-container">
+            <span class="chips-label">Quick Filters:</span>
+            <div id="segmentChips" class="chips">
+              <!-- Dynamically inserted segment chips -->
+            </div>
+          </div>
+          <div id="activeFilterNote" class="filter-note hidden"></div>
+        </section>
+
+        <!-- Submissions Table Card -->
+        <section class="table-card glass-card">
+          <div id="tableWrap" class="table-wrap">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Fetching registrations from Supabase...</p>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
   <!-- Detail Modal -->
   <div id="detailModal" class="modal-overlay hidden">
-    <div class="modal-card glass-card">
+    <div class="modal-card">
       <header class="modal-header">
         <div class="modal-title-wrap">
           <span class="badge badge-primary">Submission details</span>
@@ -414,7 +410,7 @@
           <p id="modalStudentEmail" class="modal-subtitle">student@email.com</p>
         </div>
         <button id="modalCloseBtn" class="modal-close-btn" aria-label="Close modal">
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </header>
 
@@ -434,45 +430,45 @@
 
   <!-- Delete All Confirmation Modal -->
   <div id="deleteModal" class="modal-overlay hidden" style="z-index:9999;">
-    <div class="modal-card glass-card" style="max-width:460px;width:90%;padding:32px;">
+    <div class="modal-card" style="max-width:440px;width:90%;padding:28px;">
 
       <!-- Header -->
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="width:56px;height:56px;background:rgba(239,68,68,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-          <svg viewBox="0 0 24 24" width="28" height="28" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:48px;height:48px;background:var(--accent-rose-subtle);border:1px solid var(--accent-rose-border);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="var(--accent-rose)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
-        <h2 style="margin:0 0 6px;font-size:20px;color:#ef4444;">Delete All Registrations?</h2>
-        <p style="color:var(--text-secondary);font-size:13px;margin:0;">This permanently deletes <strong style="color:var(--text-primary);">all student records</strong> from Supabase. This <u>cannot</u> be undone.</p>
+        <h2 style="margin:0 0 6px;font-size:18px;color:var(--accent-rose);">Delete All Registrations?</h2>
+        <p style="color:var(--text-secondary);font-size:12.5px;margin:0;line-height:1.5;">This permanently deletes <strong style="color:var(--text-primary);">all student records</strong> from the live registrations table.</p>
       </div>
 
       <!-- Step indicator -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:24px;">
-        <div id="deleteStep1Dot" style="width:28px;height:28px;border-radius:50%;background:#ef4444;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
-        <div style="flex:1;height:2px;background:rgba(239,68,68,0.2);"><div id="deleteStepLine" style="height:100%;width:0%;background:#ef4444;transition:width 0.4s;"></div></div>
-        <div id="deleteStep2Dot" style="width:28px;height:28px;border-radius:50%;background:rgba(239,68,68,0.15);color:#ef4444;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(239,68,68,0.3);">2</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;">
+        <div id="deleteStep1Dot" style="width:24px;height:24px;border-radius:50%;background:var(--accent-rose);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+        <div style="flex:1;height:2px;background:var(--accent-rose-subtle);"><div id="deleteStepLine" style="height:100%;width:0%;background:var(--accent-rose);transition:width 0.3s;"></div></div>
+        <div id="deleteStep2Dot" style="width:24px;height:24px;border-radius:50%;background:var(--accent-rose-subtle);color:var(--accent-rose);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--accent-rose-border);">2</div>
       </div>
 
       <!-- Step 1: Type DELETE -->
       <div id="deleteStep1">
-        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 8px;">Step 1 — Type <strong style="color:#ef4444;font-family:monospace;letter-spacing:1px;">DELETE</strong> to continue:</p>
+        <p style="font-size:12.5px;color:var(--text-secondary);margin:0 0 8px;">Step 1 — Type <strong style="color:var(--accent-rose);font-family:monospace;letter-spacing:1px;">DELETE</strong> to continue:</p>
         <input id="deleteConfirmInput" type="text" class="field" placeholder="Type DELETE here" autocomplete="off"
-          style="width:100%;box-sizing:border-box;border:1.5px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);color:var(--text-primary);">
+          style="width:100%;border-color:var(--accent-rose-border);">
       </div>
 
       <!-- Step 2: Admin password (hidden until step 1 passes) -->
-      <div id="deleteStep2" style="display:none;margin-top:18px;">
-        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 8px;">Step 2 — Enter your <strong style="color:var(--text-primary);">admin password</strong> to confirm:</p>
+      <div id="deleteStep2" style="display:none;margin-top:16px;">
+        <p style="font-size:12.5px;color:var(--text-secondary);margin:0 0 8px;">Step 2 — Enter your <strong style="color:var(--text-primary);">admin password</strong> to confirm:</p>
         <input id="deletePasswordInput" type="password" class="field" placeholder="Admin password" autocomplete="off"
-          style="width:100%;box-sizing:border-box;border:1.5px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);color:var(--text-primary);">
+          style="width:100%;border-color:var(--accent-rose-border);">
       </div>
 
       <!-- Error message -->
-      <p id="deleteConfirmError" style="color:#ef4444;font-size:12px;margin:10px 0 0;display:none;"></p>
+      <p id="deleteConfirmError" style="color:var(--accent-rose);font-size:12px;margin:10px 0 0;display:none;"></p>
 
       <!-- Actions -->
-      <div style="display:flex;gap:12px;margin-top:20px;">
+      <div style="display:flex;gap:10px;margin-top:20px;">
         <button id="deleteCancelBtn" class="btn btn-secondary" style="flex:1;">Cancel</button>
-        <button id="deleteConfirmBtn" class="btn" style="flex:1;background:#ef4444;color:#fff;opacity:0.5;cursor:not-allowed;" disabled>
+        <button id="deleteConfirmBtn" class="btn" style="flex:1;background:var(--accent-rose);color:#fff;opacity:0.5;cursor:not-allowed;" disabled>
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Delete All
         </button>
@@ -483,57 +479,57 @@
 
   <!-- Supabase Immutable Backup Modal -->
   <div id="supabaseBackupModal" class="modal-overlay hidden" style="z-index:9998;">
-    <div class="modal-card glass-card" style="max-width:520px;width:90%;padding:32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:42px;height:42px;background:rgba(56,189,248,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="#0284c7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <div class="modal-card" style="max-width:480px;width:90%;padding:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:38px;height:38px;background:var(--accent-sky-subtle);border:1px solid var(--accent-sky-border);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--accent-sky)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </div>
           <div>
-            <h2 style="margin:0;font-size:18px;font-weight:700;">Supabase Backup Archive</h2>
-            <p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary);">Automated trigger duplicate: <code>public.registrations_backup</code></p>
+            <h2 style="margin:0;font-size:16px;font-weight:700;">Supabase Backup Archive</h2>
+            <p style="margin:2px 0 0;font-size:12px;color:var(--text-secondary);">Source: <code>public.registrations_backup</code></p>
           </div>
         </div>
         <button id="backupModalCloseBtn" class="modal-close-btn" aria-label="Close modal">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
-      <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.25);border-radius:10px;padding:14px 16px;margin-bottom:22px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span>
-          <span style="font-size:12.5px;font-weight:700;color:var(--text-primary);">Permanent Disaster Recovery Storage</span>
+      <div style="background:var(--accent-sky-subtle);border:1px solid var(--accent-sky-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-emerald);"></span>
+          <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Permanent Disaster Recovery Storage</span>
         </div>
-        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.5;">This archive contains all original registrations captured on submission. Even if registrations are cleared in the primary table, this table remains permanent.</p>
+        <p style="font-size:11.5px;color:var(--text-secondary);margin:0;line-height:1.45;">This table contains all original registrations captured on submission, preserved permanently even if live registrations are cleared.</p>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button id="downloadBackupJsonBtn" class="btn btn-primary" style="justify-content:flex-start;padding:14px 18px;">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <div style="text-align:left;margin-left:6px;">
-            <div style="font-size:13.5px;font-weight:700;">Download Backup (.JSON)</div>
-            <div style="font-size:11px;opacity:0.85;font-weight:400;">Full structured database dump with metadata</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button id="downloadBackupJsonBtn" class="btn btn-primary" style="justify-content:flex-start;padding:12px 16px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <div style="text-align:left;margin-left:8px;">
+            <div style="font-size:13px;font-weight:600;">Download Backup (.JSON)</div>
+            <div style="font-size:11px;opacity:0.85;">Full structured database dump with metadata</div>
           </div>
         </button>
 
-        <button id="downloadBackupCsvBtn" class="btn btn-secondary" style="justify-content:flex-start;padding:14px 18px;">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          <div style="text-align:left;margin-left:6px;">
-            <div style="font-size:13.5px;font-weight:700;">Download Backup (.CSV)</div>
-            <div style="font-size:11px;color:var(--text-muted);font-weight:400;">Excel / Spreadsheet format with all 39 columns</div>
+        <button id="downloadBackupCsvBtn" class="btn btn-secondary" style="justify-content:flex-start;padding:12px 16px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="var(--accent-emerald)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <div style="text-align:left;margin-left:8px;">
+            <div style="font-size:13px;font-weight:600;">Download Backup (.CSV)</div>
+            <div style="font-size:11px;color:var(--text-muted);">Spreadsheet format with all 39 columns</div>
           </div>
         </button>
 
-        <button id="viewBackupArchiveBtn" class="btn btn-secondary" style="justify-content:flex-start;padding:14px 18px;">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="#6366f1" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-          <div style="text-align:left;margin-left:6px;">
-            <div style="font-size:13.5px;font-weight:700;">Browse Backup Table in Dashboard ↗</div>
-            <div style="font-size:11px;color:var(--text-muted);font-weight:400;">Switch active table to public.registrations_backup</div>
+        <button id="viewBackupArchiveBtn" class="btn btn-secondary" style="justify-content:flex-start;padding:12px 16px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="var(--accent-sky)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <div style="text-align:left;margin-left:8px;">
+            <div style="font-size:13px;font-weight:600;">Browse Backup Table in Dashboard ↗</div>
+            <div style="font-size:11px;color:var(--text-muted);">Switch active table to public.registrations_backup</div>
           </div>
         </button>
       </div>
       
-      <div id="backupDownloadStatus" style="margin-top:14px;font-size:12px;color:var(--text-muted);text-align:center;min-height:16px;"></div>
+      <div id="backupDownloadStatus" style="margin-top:12px;font-size:12px;color:var(--text-muted);text-align:center;min-height:16px;"></div>
     </div>
   </div>
 

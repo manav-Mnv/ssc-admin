@@ -48,6 +48,8 @@ let ACTIVE_SEGMENT = null;
 let ACTIVE_DEPARTMENT = null;
 let ACTIVE_PAGE = "dashboard";
 let ACTIVE_TABLE = "registrations"; // "registrations" or "registrations_backup"
+let IS_SUPER_ADMIN = false;
+let USER_ROLE = "admin"; // "super_admin" or "admin"
 let isDispatching = false;
 let stopDispatchFlag = false;
 
@@ -219,6 +221,95 @@ function logout() {
   );
 }
 
+// Update UI aesthetics and permissions based on user role
+function applyRoleUI(isSuper, role) {
+  IS_SUPER_ADMIN = !!isSuper;
+  USER_ROLE = role || (isSuper ? "super_admin" : "admin");
+
+  const sidebarRoleEl = $("#sidebarUserRole");
+  const sidebarAvatarEl = $("#sidebarUserAvatar");
+  const sidebarUserCard = $("#sidebarUserCard");
+  const deleteAllBtn = $("#deleteAllBtn");
+  const queueRoleLockBadge = $("#queueRoleLockBadge");
+  const startDispatchBtn = $("#startDispatchBtn");
+  const queueStatusText = $("#queueStatusText");
+
+  // Backup & Archive Super Admin controls
+  const navTabBackupArchive = $("#navTabBackupArchive");
+  const sourceTableSwitcherRow = $("#sourceTableSwitcherRow");
+  const backupBtn = $("#backupBtn");
+  const supabaseSnapshotBtn = $("#supabaseSnapshotBtn");
+
+  if (IS_SUPER_ADMIN) {
+    if (sidebarRoleEl) {
+      sidebarRoleEl.innerHTML = `👑 Super Admin`;
+      sidebarRoleEl.className = "sidebar-user-role role-super";
+    }
+    if (sidebarAvatarEl) {
+      sidebarAvatarEl.classList.add("avatar-super");
+    }
+    if (sidebarUserCard) {
+      sidebarUserCard.classList.add("card-super");
+    }
+    if (deleteAllBtn) {
+      deleteAllBtn.style.display = "inline-flex";
+    }
+    if (queueRoleLockBadge) {
+      queueRoleLockBadge.classList.add("hidden");
+    }
+    if (startDispatchBtn && !isDispatching) {
+      startDispatchBtn.removeAttribute("title");
+    }
+
+    // Super Admin: Enable Backup tools
+    if (navTabBackupArchive) navTabBackupArchive.style.display = "flex";
+    if (sourceTableSwitcherRow) sourceTableSwitcherRow.style.display = "flex";
+    if (backupBtn) backupBtn.style.display = "inline-flex";
+    if (supabaseSnapshotBtn) supabaseSnapshotBtn.style.display = "inline-flex";
+  } else {
+    if (sidebarRoleEl) {
+      sidebarRoleEl.innerHTML = `👤 Admin (Reviewer)`;
+      sidebarRoleEl.className = "sidebar-user-role role-reviewer";
+    }
+    if (sidebarAvatarEl) {
+      sidebarAvatarEl.classList.remove("avatar-super");
+    }
+    if (sidebarUserCard) {
+      sidebarUserCard.classList.remove("card-super");
+    }
+    // Reviewer: Hide Delete All button completely from Danger Zone
+    if (deleteAllBtn) {
+      deleteAllBtn.style.display = "none";
+    }
+    // Reviewer: Show locked badge in Email Dispatcher
+    if (queueRoleLockBadge) {
+      queueRoleLockBadge.classList.remove("hidden");
+    }
+    if (startDispatchBtn && !isDispatching) {
+      startDispatchBtn.setAttribute("disabled", "true");
+      startDispatchBtn.setAttribute("title", "Super Admin authorization required to dispatch emails");
+      startDispatchBtn.innerHTML = `
+        <span>Locked</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      `;
+    }
+    if (queueStatusText && !isDispatching) {
+      queueStatusText.textContent = "🔒 Email dispatching is reserved for Super Admin.";
+    }
+
+    // Reviewer: Hide all Backup Archive and Snapshot tools
+    if (navTabBackupArchive) navTabBackupArchive.style.display = "none";
+    if (sourceTableSwitcherRow) sourceTableSwitcherRow.style.display = "none";
+    if (backupBtn) backupBtn.style.display = "none";
+    if (supabaseSnapshotBtn) supabaseSnapshotBtn.style.display = "none";
+
+    // Safety fallback: if currently pointed to backup table, force revert to live registrations
+    if (ACTIVE_TABLE === "registrations_backup") {
+      ACTIVE_TABLE = "registrations";
+    }
+  }
+}
+
 // Fetch Registrations Data (Live Direct Sync)
 async function load(isSilent = false, isManual = false) {
   const isBackupView = ACTIVE_TABLE === "registrations_backup";
@@ -254,6 +345,8 @@ async function load(isSilent = false, isManual = false) {
     const data = await r.json();
     if (!data.rows) throw new Error(data.error || "Malformed API response");
     
+    applyRoleUI(data.is_super_admin, data.role);
+    
     ALL_ROWS = data.rows;
     const totalCount = data.count !== undefined ? data.count : data.rows.length;
     countEl.textContent = totalCount;
@@ -273,11 +366,11 @@ async function load(isSilent = false, isManual = false) {
 
     if (isManual) {
       const toast = document.createElement("div");
-      toast.style.cssText = "position:fixed;bottom:28px;right:28px;background:rgba(16,185,129,0.95);color:#fff;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(16,185,129,0.35);backdrop-filter:blur(8px);display:flex;align-items:center;gap:8px;";
-      toast.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Live sync complete: ${totalCount} registrations up-to-date</span>`;
+      toast.style.cssText = "position:fixed;bottom:24px;right:24px;background:#0f172a;color:#f8fafc;border:1px solid rgba(255,255,255,0.1);border-left:3px solid var(--accent-emerald);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:99999;box-shadow:0 10px 25px rgba(0,0,0,0.5);display:flex;align-items:center;gap:8px;";
+      toast.innerHTML = `<svg viewBox="0 0 24 24" width="15" height="15" stroke="var(--accent-emerald)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Live sync complete: ${totalCount} registrations</span>`;
       document.body.appendChild(toast);
-      gsap.fromTo(toast, { opacity: 0, y: 15 }, { duration: 0.3, opacity: 1, y: 0, ease: "power2.out" });
-      setTimeout(() => gsap.to(toast, { duration: 0.3, opacity: 0, y: 10, onComplete: () => toast.remove() }), 3000);
+      gsap.fromTo(toast, { opacity: 0, y: 12 }, { duration: 0.25, opacity: 1, y: 0, ease: "power2.out" });
+      setTimeout(() => gsap.to(toast, { duration: 0.25, opacity: 0, y: 8, onComplete: () => toast.remove() }), 2800);
     }
   } catch (e) {
     tableWrap.innerHTML = `
@@ -318,9 +411,18 @@ function calculateMetrics(rows) {
     queueProgressPct.textContent = `${pct}% dispatched`;
     queueProgressCount.textContent = `${sentCount} / ${total} emails sent`;
     
-    if (unsentCount > 0) {
+    if (!IS_SUPER_ADMIN) {
+      queueStatusText.textContent = `🔒 ${unsentCount} pending email${unsentCount === 1 ? '' : 's'}. (Super Admin authorization required to dispatch).`;
+      startDispatchBtn.setAttribute("disabled", "true");
+      startDispatchBtn.setAttribute("title", "Super Admin authorization required to dispatch emails");
+      startDispatchBtn.innerHTML = `
+        <span>Locked</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      `;
+    } else if (unsentCount > 0) {
       queueStatusText.textContent = `Queue holds ${unsentCount} pending email${unsentCount > 1 ? 's' : ''}.`;
       startDispatchBtn.removeAttribute("disabled");
+      startDispatchBtn.removeAttribute("title");
       startDispatchBtn.innerHTML = `
         <span>Start Dispatch</span>
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -328,6 +430,7 @@ function calculateMetrics(rows) {
     } else {
       queueStatusText.textContent = "Email queue is completely empty!";
       startDispatchBtn.setAttribute("disabled", "true");
+      startDispatchBtn.removeAttribute("title");
       startDispatchBtn.innerHTML = `
         <span>All Sent</span>
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -392,6 +495,19 @@ function updateFilterNote() {
     const returnBtn = $("#returnToLiveBtn");
     if (returnBtn) {
       returnBtn.addEventListener("click", () => switchPage("all"));
+    }
+    return;
+  }
+
+  if (ACTIVE_DEPARTMENT === "ideas") {
+    activeFilterNote.innerHTML = `
+      <span style="color:var(--swift);display:inline-flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2a6 6 0 0 1 6 6c0 2.22-1.21 4.15-3 5.19V16a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2.81C7.21 12.15 6 10.22 6 8a6 6 0 0 1 6-6z"></path><path d="M9 21h6"></path></svg> Viewing <strong>App Idea Submissions (Enrollment & Project Concepts)</strong></span>
+      <button class="link-btn" id="viewAllSubmissionsBtn" style="color:var(--swift);font-weight:700;">Show All Submissions</button>
+    `;
+    activeFilterNote.classList.remove("hidden");
+    const viewAllBtn = $("#viewAllSubmissionsBtn");
+    if (viewAllBtn) {
+      viewAllBtn.addEventListener("click", () => switchPage("all"));
     }
     return;
   }
@@ -477,13 +593,27 @@ function renderFormattedValue(key, value) {
   return esc(String(value));
 }
 
+// Application Reference Code Helper
+function getRefCode(r) {
+  if (!r) return "";
+  if (r.id) {
+    return `#SSC27-${String(r.id).replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+  }
+  return "#SSC27-PENDING";
+}
+
 // Get Filtered Rows based on search, department, and segment
 function getFilteredRows(query) {
   const q = (query || "").trim().toLowerCase();
+  const cleanQ = q.replace(/^#?ssc27-?/i, "");
   
   return ALL_ROWS.filter((r) => {
     if (q) {
+      const ref = getRefCode(r).toLowerCase();
       const match = (
+        ref.includes(q) ||
+        ref.includes(cleanQ) ||
+        String(r.id || "").toLowerCase().includes(cleanQ) ||
         String(r.full_name || "").toLowerCase().includes(q) ||
         String(r.email || "").toLowerCase().includes(q) ||
         String(r.personal_email || "").toLowerCase().includes(q) ||
@@ -542,27 +672,42 @@ function renderTable(query) {
   const startIndex = (CURRENT_PAGE - 1) * effectivePageSize;
   const endIndex = Math.min(startIndex + effectivePageSize, totalFiltered);
   const pageRows = filtered.slice(startIndex, endIndex);
+  const isIdeasView = ACTIVE_DEPARTMENT === "ideas";
 
   let html = `
     <div class="table-scroll-wrap">
-      <table class="entries">
+      ${isIdeasView ? `
+        <div class="ideas-view-banner">
+          <div class="ideas-view-title">
+            <span class="ideas-badge">💡 App Idea Submissions</span>
+            <span class="ideas-count-text">${totalFiltered} student project idea${totalFiltered === 1 ? '' : 's'}</span>
+          </div>
+          <div class="ideas-hint">Focused view: Click any idea submission to inspect candidate profile & developer links.</div>
+        </div>
+      ` : ''}
+      <table class="entries ${isIdeasView ? 'entries-ideas' : ''}">
         <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Faculty</th>
-            <th>Programme</th>
-            <th>Sem</th>
-            <th>Email Type</th>
-            <th>Enrollment No.</th>
-            <th>Mac Access</th>
-            <th>App Idea</th>
-            <th>Submitted</th>
-            <th>Email Status</th>
-            <th></th>
-          </tr>
+          ${isIdeasView ? `
+            <tr>
+              <th style="width: 45px;">#</th>
+              <th style="width: 170px;">Enrollment No.</th>
+              <th style="width: 220px;">Candidate</th>
+              <th style="width: 210px;">Faculty & Course</th>
+              <th>App Playground Idea & Description</th>
+              <th style="width: 140px;">Mac Access</th>
+              <th style="width: 50px;"></th>
+            </tr>
+          ` : `
+            <tr>
+              <th style="width: 45px;">#</th>
+              <th style="min-width: 240px;">Candidate</th>
+              <th style="min-width: 170px;">Enrollment No.</th>
+              <th style="min-width: 210px;">Faculty & Course</th>
+              <th style="min-width: 160px;">Phone & Mac</th>
+              <th style="min-width: 120px;">Email Status</th>
+              <th style="width: 50px;"></th>
+            </tr>
+          `}
         </thead>
         <tbody>
   `;
@@ -571,48 +716,87 @@ function renderTable(query) {
     const idx = ALL_ROWS.indexOf(r) + 1;
     const dateStr = fmtDate(r.created_at);
     const isSent = r.email_sent;
+    const enrollNo = r.enrollment_number || r.enrollment_id || "—";
+    const studentName = r.full_name || "N/A";
+    const studentEmail = r.email || "";
+    const rawIdea = String(r.idea_description || r.app_playground_idea || "").trim();
+    const macRaw = String(r.mac_access || "").trim() || "—";
+    const phone = r.contact_number || "—";
+    const course = r.programme_course || "—";
+    const sem = r.current_semester_year ? `Sem ${r.current_semester_year}` : "";
 
-    const fac = (r.faculty_institute || "").trim().toUpperCase();
+    const fac = (r.faculty_institute || "Other").trim();
     let facClass = "faculty-pill";
-    if (fac.includes("PIET")) facClass += " piet";
-    else if (fac.includes("PIT")) facClass += " pit";
+    if (fac.toUpperCase().includes("PIET")) facClass += " piet";
+    else if (fac.toUpperCase().includes("PIT")) facClass += " pit";
 
     const hasUni = r.has_uni_email === true || r.has_uni_email === "true";
-    const emailTypeBadge = hasUni
-      ? `<span class="status-indicator sent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>🎓 Uni</span></span>`
-      : `<span class="status-indicator unsent" style="font-size:11px;padding:3px 8px;"><span class="status-dot"></span><span>📧 Personal</span></span>`;
+    const emailTypeTag = hasUni
+      ? `<span class="email-mini-tag uni" title="University Email">🎓 Uni</span>`
+      : `<span class="email-mini-tag personal" title="Personal Email">📧 Personal</span>`;
 
-    const rawIdea = String(r.idea_description || r.app_playground_idea || "").trim();
-    const ideaPreview = rawIdea.length > 0
-      ? `<span title="${esc(rawIdea)}" style="cursor:default;">${esc(rawIdea.slice(0, 38))}${rawIdea.length > 38 ? "…" : ""}</span>`
-      : `<span style="color:var(--text-muted);font-size:11px;">—</span>`;
-
-    const macRaw = String(r.mac_access || "").trim();
-    const macLabel = macRaw || "—";
-
-    html += `
-      <tr class="row" data-id="${esc(r.id || idx)}">
-        <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
-        <td class="name-cell">${esc(r.full_name || "N/A")}</td>
-        <td class="email-cell">${esc(r.email || "N/A")}</td>
-        <td style="font-size:12.5px;letter-spacing:0.3px;">${esc(r.contact_number || "—")}</td>
-        <td><span class="${facClass}">${esc(r.faculty_institute || "Other")}</span></td>
-        <td style="font-size:12.5px;">${esc(r.programme_course || "—")}</td>
-        <td style="text-align:center;font-size:12.5px;">${esc(String(r.current_semester_year || "—"))}</td>
-        <td>${emailTypeBadge}</td>
-        <td class="enrollment-cell">${esc(r.enrollment_number || r.enrollment_id || "—")}</td>
-        <td style="font-size:12px;">${esc(macLabel)}</td>
-        <td style="font-size:12px;max-width:180px;overflow:hidden;">${ideaPreview}</td>
-        <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">${esc(dateStr)}</td>
-        <td>
-          <span class="status-indicator ${isSent ? 'sent' : 'unsent'}">
-            <span class="status-dot"></span>
-            <span>${isSent ? 'Sent' : 'Pending'}</span>
-          </span>
-        </td>
-        <td><span class="chevy-btn">▶</span></td>
-      </tr>
-    `;
+    if (isIdeasView) {
+      html += `
+        <tr class="row row-idea" data-id="${esc(r.id || idx)}">
+          <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
+          <td class="enrollment-cell" style="font-size:13.5px;font-weight:700;color:var(--swift);letter-spacing:0.4px;">
+            ${esc(enrollNo)}
+          </td>
+          <td>
+            <div class="name-cell">${esc(studentName)}</div>
+            <div class="email-cell">${esc(studentEmail)}</div>
+          </td>
+          <td>
+            <div><span class="${facClass}">${esc(fac)}</span></div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">${esc(course)}</div>
+          </td>
+          <td style="white-space:normal;min-width:300px;padding:12px 16px;">
+            <div class="idea-text-box">
+              <span class="idea-quote-mark">“</span>
+              <span class="idea-full-text">${esc(rawIdea || "No description provided.")}</span>
+              <span class="idea-quote-mark">”</span>
+            </div>
+          </td>
+          <td><span class="mac-pill">${esc(macRaw)}</span></td>
+          <td><span class="chevy-btn" title="View details">▶</span></td>
+        </tr>
+      `;
+    } else {
+      html += `
+        <tr class="row" data-id="${esc(r.id || idx)}">
+          <td style="color:var(--text-secondary);font-size:12px;">${idx}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span class="name-cell">${esc(studentName)}</span>
+              <span class="ref-code-badge" style="font-family:monospace;font-size:11px;background:rgba(240,81,56,0.1);color:#f05138;padding:1px 6px;border-radius:4px;font-weight:700;border:1px solid rgba(240,81,56,0.25);" title="Application Reference Code">${esc(getRefCode(r))}</span>
+              ${emailTypeTag}
+            </div>
+            <div class="email-cell" style="margin-top:2px;">${esc(studentEmail)}</div>
+          </td>
+          <td class="enrollment-cell" style="font-weight:700;color:var(--swift);letter-spacing:0.4px;">
+            ${esc(enrollNo)}
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="${facClass}">${esc(fac)}</span>
+              ${sem ? `<span style="font-size:11.5px;color:var(--text-secondary);font-weight:500;">${esc(sem)}</span>` : ''}
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">${esc(course)}</div>
+          </td>
+          <td>
+            <div style="font-size:12.5px;font-weight:600;letter-spacing:0.3px;color:var(--text-primary);">${esc(phone)}</div>
+            <div style="margin-top:3px;"><span class="mac-pill" style="font-size:11px;padding:2px 7px;">${esc(macRaw)}</span></div>
+          </td>
+          <td>
+            <span class="status-indicator ${isSent ? 'sent' : 'unsent'}">
+              <span class="status-dot"></span>
+              <span>${isSent ? 'Sent' : 'Pending'}</span>
+            </span>
+          </td>
+          <td><span class="chevy-btn" title="View full 39 fields">▶</span></td>
+        </tr>
+      `;
+    }
   });
 
   html += `
@@ -705,18 +889,38 @@ function toggleDetailRow(tr, row) {
     openRow.remove();
   });
   
+  const isIdeasView = ACTIVE_DEPARTMENT === "ideas";
+  const colspan = isIdeasView ? 7 : 14;
+  let inlineTab = isIdeasView ? "idea" : "all";
+
   const detailRow = document.createElement("tr");
   detailRow.className = "detail-row";
   
   detailRow.innerHTML = `
-    <td colspan="14">
+    <td colspan="${colspan}">
       <div class="detail-content-wrapper" style="height: 0; opacity: 0;">
         <div class="detail-inner glass-card">
+          <div class="detail-action-bar" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="ref-code-badge" style="font-family:monospace;font-size:12px;background:rgba(240,81,56,0.15);color:#f05138;padding:3px 8px;border-radius:5px;font-weight:700;border:1px solid rgba(240,81,56,0.3);">
+                ${esc(getRefCode(row))}
+              </span>
+              <span class="status-indicator ${row.email_sent ? 'sent' : 'unsent'}">
+                <span class="status-dot"></span>
+                <span>${row.email_sent ? 'Email Sent' : 'Queue Pending'}</span>
+              </span>
+              <span style="font-size:12.5px;color:var(--text-secondary);">Direct Recipient: <strong style="color:var(--text-primary);">${esc(row.email)}</strong></span>
+            </div>
+            <button class="btn btn-sm direct-send-email-btn" data-id="${esc(row.id)}" style="background:rgba(240,81,56,0.14);color:#f05138;border:1px solid rgba(240,81,56,0.3);display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;padding:6px 12px;border-radius:7px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              <span>${row.email_sent ? 'Resend Confirmation' : 'Send Confirmation Now'}</span>
+            </button>
+          </div>
           <div class="detail-tabs">
-            <button class="detail-tab-btn active" data-tab="all">All 39 Fields</button>
+            <button class="detail-tab-btn ${inlineTab === 'all' ? 'active' : ''}" data-tab="all">All 39 Fields</button>
             <button class="detail-tab-btn" data-tab="personal">Personal & Academic</button>
             <button class="detail-tab-btn" data-tab="device">Device & Experience</button>
-            <button class="detail-tab-btn" data-tab="idea">App Idea & Motivation</button>
+            <button class="detail-tab-btn ${inlineTab === 'idea' ? 'active' : ''}" data-tab="idea">App Idea & Motivation</button>
             <button class="detail-tab-btn" data-tab="developer">Developer Profiles</button>
           </div>
           <div class="detail-body-container">
@@ -730,11 +934,17 @@ function toggleDetailRow(tr, row) {
   tr.parentNode.insertBefore(detailRow, tr.nextSibling);
   tr.classList.add("open");
   
+  const directSendBtn = detailRow.querySelector(".direct-send-email-btn");
+  if (directSendBtn) {
+    directSendBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await triggerDirectEmail(row, directSendBtn);
+    });
+  }
+  
   const wrapper = detailRow.querySelector(".detail-content-wrapper");
   const container = detailRow.querySelector(".detail-body-container");
   const tabBtns = detailRow.querySelectorAll(".detail-tab-btn");
-  
-  let inlineTab = "all";
   
   function renderInlineData() {
     let html = "";
@@ -837,6 +1047,7 @@ function updateFacultyBreakdown(rows) {
   let uniCount = 0;
   let personalCount = 0;
   let ideasCount = 0;
+  let sentCount = 0;
   
   rows.forEach(r => {
     if (r.has_uni_email === true || r.has_uni_email === "true") {
@@ -848,12 +1059,15 @@ function updateFacultyBreakdown(rows) {
     if (ideaText.length > 0) {
       ideasCount++;
     }
+    if (r.email_sent === true || r.email_sent === "true") {
+      sentCount++;
+    }
   });
   
   const uniPct = total ? Math.round((uniCount / total) * 100) : 0;
   const personalPct = total ? Math.round((personalCount / total) * 100) : 0;
   const ideasPct = total ? Math.round((ideasCount / total) * 100) : 0;
-  const allPct = 100;
+  const sentPct = total ? Math.round((sentCount / total) * 100) : 0;
   
   const deptIdeasCount = $("#deptIdeasCount");
   const deptIdeasProgress = $("#deptIdeasProgress");
@@ -873,23 +1087,71 @@ function updateFacultyBreakdown(rows) {
 
   if (deptIdeasCount) deptIdeasCount.textContent = ideasCount;
   if (deptIdeasProgress) deptIdeasProgress.style.width = `${ideasPct}%`;
-  if (deptIdeasPct) deptIdeasPct.textContent = `${ideasPct}% of total registrations`;
+  if (deptIdeasPct) deptIdeasPct.textContent = `${ideasPct}% with ideas (${ideasCount}/${total})`;
   
   if (deptPietCount) deptPietCount.textContent = uniCount;
   if (deptPietProgress) deptPietProgress.style.width = `${uniPct}%`;
-  if (deptPietPct) deptPietPct.textContent = `${uniPct}% of total registrations`;
+  if (deptPietPct) deptPietPct.textContent = `${uniPct}% official uni emails (${uniCount}/${total})`;
   
   if (deptPitCount) deptPitCount.textContent = personalCount;
   if (deptPitProgress) deptPitProgress.style.width = `${personalPct}%`;
-  if (deptPitPct) deptPitPct.textContent = `${personalPct}% of total registrations`;
+  if (deptPitPct) deptPitPct.textContent = `${personalPct}% personal emails (${personalCount}/${total})`;
   
   if (deptOtherCount) deptOtherCount.textContent = total;
-  if (deptOtherProgress) deptOtherProgress.style.width = `${allPct}%`;
-  if (deptOtherPct) deptOtherPct.textContent = `${total} entries combined`;
+  if (deptOtherProgress) deptOtherProgress.style.width = `${sentPct}%`;
+  if (deptOtherPct) deptOtherPct.textContent = total === 0 ? "0 submissions" : `${sentCount} of ${total} confirmed (${sentPct}%)`;
+}
+
+// Direct Single-Student Email Dispatch Handler
+async function triggerDirectEmail(row, btn) {
+  if (!IS_SUPER_ADMIN) {
+    alert("Super Admin passcode required to dispatch automated emails.");
+    return;
+  }
+
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" class="spin-hover" style="animation:spin 1s linear infinite;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+    <span>Sending to ${esc(row.email || "recipient")}...</span>
+  `;
+
+  try {
+    const response = await fetch("/api/send-emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-key": getKey()
+      },
+      body: JSON.stringify({ id: row.id })
+    });
+
+    const resData = await response.json();
+    if (!response.ok) {
+      throw new Error(resData.error || `HTTP ${response.status}`);
+    }
+
+    btn.innerHTML = `<span>✔ Email Sent Successfully!</span>`;
+    btn.style.background = "rgba(16, 185, 129, 0.15)";
+    btn.style.color = "#10b981";
+    btn.style.borderColor = "rgba(16, 185, 129, 0.35)";
+
+    // Refresh rows silently
+    await load(true);
+  } catch (err) {
+    alert(`Email dispatch failed: ${err.message}`);
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+  }
 }
 
 // Batch Email Dispatch Loop
 async function startDispatch() {
+  if (!IS_SUPER_ADMIN) {
+    alert("Unauthorized: Only Super Admin can dispatch automated emails.");
+    return;
+  }
+
   if (isDispatching) {
     stopDispatchFlag = true;
     startDispatchBtn.setAttribute("disabled", "true");
@@ -1065,6 +1327,10 @@ function exportCSV() {
 
 // Backup JSON (Loaded client cache)
 function backupJSON() {
+  if (!IS_SUPER_ADMIN) {
+    alert("Unauthorized: Exporting raw backup snapshots requires Super Admin privileges.");
+    return;
+  }
   if (ALL_ROWS.length === 0) {
     alert("No data to back up.");
     return;
@@ -1093,6 +1359,10 @@ function backupJSON() {
 // Supabase Immutable Backup Snapshot Modal & Download Logic
 // ───────────────────────────────────────────────────────────────
 function showSupabaseBackupModal() {
+  if (!IS_SUPER_ADMIN) {
+    alert("Unauthorized: Access to the immutable backup archive requires Super Admin privileges.");
+    return;
+  }
   const modal = $("#supabaseBackupModal");
   const statusEl = $("#backupDownloadStatus");
   if (statusEl) statusEl.textContent = "";
@@ -1115,6 +1385,10 @@ function closeSupabaseBackupModal() {
 
 // Download Complete Snapshot directly from Supabase public.registrations_backup
 async function downloadSupabaseBackup(format = "json") {
+  if (!IS_SUPER_ADMIN) {
+    alert("Unauthorized: Access to the immutable backup archive requires Super Admin privileges.");
+    return;
+  }
   const statusEl = $("#backupDownloadStatus");
   if (statusEl) {
     statusEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;color:#0284c7;"><svg class="spin" viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Fetching immutable snapshot from public.registrations_backup...</span>`;
@@ -1252,6 +1526,11 @@ async function downloadSupabaseBackup(format = "json") {
 
 // Delete All Data Modal Handling
 function showDeleteModal() {
+  if (!IS_SUPER_ADMIN) {
+    alert("Unauthorized: Only Super Admin can access database deletion.");
+    return;
+  }
+
   const modal = $("#deleteModal");
   const input = $("#deleteConfirmInput");
   const pwInput = $("#deletePasswordInput");
@@ -1290,6 +1569,11 @@ function closeDeleteModal() {
 }
 
 async function confirmDeleteAll() {
+  if (!IS_SUPER_ADMIN) {
+    alert("Unauthorized: Only Super Admin can perform database deletion.");
+    return;
+  }
+
   const confirmBtn = $("#deleteConfirmBtn");
   const originalHTML = confirmBtn.innerHTML;
 
@@ -1313,11 +1597,11 @@ async function confirmDeleteAll() {
     countEl.textContent = 0;
 
     const toast = document.createElement("div");
-    toast.style.cssText = "position:fixed;bottom:28px;right:28px;background:#ef4444;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(239,68,68,0.4);";
-    toast.textContent = `✔ All active registrations deleted. (Supabase registrations_backup table preserved).`;
+    toast.style.cssText = "position:fixed;bottom:24px;right:24px;background:#0f172a;color:#f8fafc;border:1px solid rgba(255,255,255,0.1);border-left:3px solid var(--accent-rose);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:99999;box-shadow:0 10px 25px rgba(0,0,0,0.5);display:flex;align-items:center;gap:8px;";
+    toast.innerHTML = `<svg viewBox="0 0 24 24" width="15" height="15" stroke="var(--accent-rose)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>All active registrations cleared. (registrations_backup preserved).</span>`;
     document.body.appendChild(toast);
-    gsap.fromTo(toast, { opacity: 0, y: 20 }, { duration: 0.3, opacity: 1, y: 0 });
-    setTimeout(() => gsap.to(toast, { duration: 0.3, opacity: 0, y: 10, onComplete: () => toast.remove() }), 4000);
+    gsap.fromTo(toast, { opacity: 0, y: 12 }, { duration: 0.25, opacity: 1, y: 0, ease: "power2.out" });
+    setTimeout(() => gsap.to(toast, { duration: 0.25, opacity: 0, y: 8, onComplete: () => toast.remove() }), 3500);
 
   } catch (err) {
     confirmBtn.disabled = false;
@@ -1400,6 +1684,11 @@ function switchPage(pageId) {
         ACTIVE_DEPARTMENT = "personal-mail";
         ACTIVE_TABLE = "registrations";
       } else if (pageId === "backup-archive") {
+        if (!IS_SUPER_ADMIN) {
+          alert("Unauthorized: Access to the immutable backup archive requires Super Admin privileges.");
+          switchPage("all");
+          return;
+        }
         ACTIVE_SEGMENT = null;
         ACTIVE_DEPARTMENT = null;
         ACTIVE_TABLE = "registrations_backup";
@@ -1428,42 +1717,27 @@ function switchPage(pageId) {
 
 // Table Data Source Switcher Helper
 function setTableSource(source) {
+  if ((source === "backup" || source === "registrations_backup") && !IS_SUPER_ADMIN) {
+    alert("Unauthorized: Access to the immutable backup archive requires Super Admin privileges.");
+    return;
+  }
   ACTIVE_TABLE = source === "backup" || source === "registrations_backup" ? "registrations_backup" : "registrations";
   const liveBtn = $("#toggleLiveTableBtn");
   const backupBtn = $("#toggleBackupTableBtn");
   const codeBadge = $("#activeTableCode");
 
-  if (ACTIVE_TABLE === "registrations_backup") {
-    if (liveBtn) {
-      liveBtn.style.background = "transparent";
-      liveBtn.style.color = "var(--text-secondary)";
-      liveBtn.style.boxShadow = "none";
-    }
-    if (backupBtn) {
-      backupBtn.style.background = "#fff";
-      backupBtn.style.color = "var(--text-primary)";
-      backupBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
-    }
-    if (codeBadge) {
+  if (liveBtn) liveBtn.classList.toggle("active", ACTIVE_TABLE !== "registrations_backup");
+  if (backupBtn) backupBtn.classList.toggle("active", ACTIVE_TABLE === "registrations_backup");
+  
+  if (codeBadge) {
+    if (ACTIVE_TABLE === "registrations_backup") {
       codeBadge.textContent = "public.registrations_backup";
-      codeBadge.style.background = "rgba(56,189,248,0.1)";
-      codeBadge.style.color = "#0284c7";
-    }
-  } else {
-    if (liveBtn) {
-      liveBtn.style.background = "#fff";
-      liveBtn.style.color = "var(--text-primary)";
-      liveBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
-    }
-    if (backupBtn) {
-      backupBtn.style.background = "transparent";
-      backupBtn.style.color = "var(--text-secondary)";
-      backupBtn.style.boxShadow = "none";
-    }
-    if (codeBadge) {
+      codeBadge.style.background = "var(--accent-sky-subtle)";
+      codeBadge.style.color = "var(--accent-sky)";
+    } else {
       codeBadge.textContent = "public.registrations";
-      codeBadge.style.background = "rgba(16,185,129,0.1)";
-      codeBadge.style.color = "#059669";
+      codeBadge.style.background = "var(--accent-emerald-subtle)";
+      codeBadge.style.color = "var(--accent-emerald)";
     }
   }
 

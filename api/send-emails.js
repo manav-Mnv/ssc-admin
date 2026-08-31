@@ -4,7 +4,8 @@ const crypto = require("crypto");
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ADMIN_KEY = process.env.ADMIN_KEY;
+const ADMIN_KEY = process.env.ADMIN_KEY || "sscpu";
+const SUPER_ADMIN_KEY = process.env.SUPER_ADMIN_KEY || "applessc";
 
 function isAuthorized(reqAdminKey, configuredKey) {
   if (!configuredKey || typeof reqAdminKey !== "string" || !reqAdminKey) return false;
@@ -30,8 +31,20 @@ module.exports = async function handler(req, res) {
   }
 
   const clientKey = req.headers["x-admin-key"] || (req.body && req.body.key);
-  if (!ADMIN_KEY || !isAuthorized(clientKey, ADMIN_KEY)) {
-    res.status(401).json({ error: "Unauthorized: Invalid or missing admin key" });
+  if (!clientKey) {
+    res.status(401).json({ error: "Unauthorized: Missing authentication passcode" });
+    return;
+  }
+
+  // If standard admin key is passed, reject with 403 Forbidden
+  if (isAuthorized(clientKey, ADMIN_KEY) && !isAuthorized(clientKey, SUPER_ADMIN_KEY)) {
+    res.status(403).json({ error: "Forbidden: Automated email dispatch requires Super Admin privileges." });
+    return;
+  }
+
+  // Super Admin validation
+  if (!isAuthorized(clientKey, SUPER_ADMIN_KEY)) {
+    res.status(401).json({ error: "Unauthorized: Invalid Super Admin passcode." });
     return;
   }
 
@@ -50,15 +63,23 @@ module.exports = async function handler(req, res) {
       auth: { persistSession: false }
     });
 
+    const targetId = req.body && req.body.id;
+    const targetEmail = req.body && req.body.email;
     const batchSize = Math.min(Math.max(parseInt(req.body && req.body.batchSize, 10) || 5, 1), 25);
 
-    // Fetch unsent registrations
-    const { data: students, error: fetchErr } = await supabase
+    let query = supabase
       .from("registrations")
-      .select("id, email, full_name, enrollment_number, faculty_institute")
-      .eq("email_sent", false)
-      .order("created_at", { ascending: true })
-      .limit(batchSize);
+      .select("id, email, full_name, enrollment_number, faculty_institute");
+
+    if (targetId) {
+      query = query.eq("id", targetId).limit(1);
+    } else if (targetEmail) {
+      query = query.eq("email", targetEmail).limit(1);
+    } else {
+      query = query.eq("email_sent", false).order("created_at", { ascending: true }).limit(batchSize);
+    }
+
+    const { data: students, error: fetchErr } = await query;
 
     if (fetchErr) {
       return res.status(500).json({ error: fetchErr.message });
@@ -69,7 +90,7 @@ module.exports = async function handler(req, res) {
         processed: 0,
         sent: 0,
         failed: 0,
-        message: "Email queue is empty. All registrations processed!"
+        message: targetId || targetEmail ? "No matching registration record found." : "Email queue is empty. All registrations processed!"
       });
     }
 
@@ -92,7 +113,7 @@ module.exports = async function handler(req, res) {
       const rawName = (student.full_name || "Applicant").trim();
       const first = escapeHtml(rawName.split(" ")[0]);
       const fullNameEsc = escapeHtml(rawName);
-      const uniqueHash = crypto.randomBytes(4).toString("hex").toUpperCase();
+      const uniqueHash = (student.id ? student.id.replace(/-/g, "").slice(0, 8) : crypto.randomBytes(4).toString("hex")).toUpperCase();
       const studentEmail = (student.email || "").trim();
 
       if (!studentEmail || !studentEmail.includes("@")) {

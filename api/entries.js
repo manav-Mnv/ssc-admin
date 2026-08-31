@@ -3,7 +3,8 @@ const crypto = require("crypto");
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ADMIN_KEY = process.env.ADMIN_KEY;
+const ADMIN_KEY = process.env.ADMIN_KEY || "sscpu";
+const SUPER_ADMIN_KEY = process.env.SUPER_ADMIN_KEY || "applessc";
 
 function isAuthorized(reqAdminKey, configuredKey) {
   if (!configuredKey || typeof reqAdminKey !== "string" || !reqAdminKey) return false;
@@ -12,16 +13,32 @@ function isAuthorized(reqAdminKey, configuredKey) {
   return crypto.timingSafeEqual(hashReq, hashConf);
 }
 
+function verifyAuth(reqAdminKey) {
+  if (!reqAdminKey || typeof reqAdminKey !== "string") {
+    return { isAuthorized: false, isSuperAdmin: false, role: null };
+  }
+  const isSuper = isAuthorized(reqAdminKey, SUPER_ADMIN_KEY);
+  if (isSuper) {
+    return { isAuthorized: true, isSuperAdmin: true, role: "super_admin" };
+  }
+  const isStandard = isAuthorized(reqAdminKey, ADMIN_KEY);
+  if (isStandard) {
+    return { isAuthorized: true, isSuperAdmin: false, role: "admin" };
+  }
+  return { isAuthorized: false, isSuperAdmin: false, role: null };
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
-  // Passcode gate check with timing attack defense
+  // Passcode gate check with timing attack defense (Super Admin or Reviewer Admin)
   const clientKey = req.headers["x-admin-key"] || req.query.key;
-  if (!ADMIN_KEY || !isAuthorized(clientKey, ADMIN_KEY)) {
-    res.status(401).json({ error: "Unauthorized: Invalid or missing admin key" });
+  const auth = verifyAuth(clientKey);
+  if (!auth.isAuthorized) {
+    res.status(401).json({ error: "Unauthorized: Invalid or missing passcode" });
     return;
   }
 
@@ -39,6 +56,13 @@ module.exports = async function handler(req, res) {
     const isBackup = req.query.source === "backup" || 
                      req.query.table === "backup" || 
                      req.query.table === "registrations_backup";
+
+    // Enforce Super Admin on backup archive queries
+    if (isBackup && !auth.isSuperAdmin) {
+      res.status(403).json({ error: "Forbidden: Access to the immutable backup archive requires Super Admin privileges." });
+      return;
+    }
+
     const targetTable = isBackup ? "registrations_backup" : "registrations";
 
     const maxLimit = parseInt(req.query.limit, 10) || 10000;
@@ -57,6 +81,8 @@ module.exports = async function handler(req, res) {
     }
 
     res.status(200).json({
+      is_super_admin: auth.isSuperAdmin,
+      role: auth.role,
       table: targetTable,
       is_backup: isBackup,
       count: totalCount !== null ? totalCount : rows.length,

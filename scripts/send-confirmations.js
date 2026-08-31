@@ -24,6 +24,9 @@ function getArg(flag, defaultValue) {
   return defaultValue;
 }
 const isDryRun = args.includes("--dry-run");
+const isForce = args.includes("--force");
+const targetId = getArg("--id", null);
+const targetEmail = getArg("--email", null);
 const batchSize = parseInt(getArg("--batch-size", "10"), 10);
 const delayMs = parseInt(getArg("--delay-ms", "1200"), 10);
 const maxQuota = parseInt(getArg("--max-quota", "450"), 10);
@@ -90,13 +93,21 @@ async function main() {
   let totalFailed = 0;
 
   while (totalSent < maxQuota) {
-    const currentLimit = Math.min(batchSize, maxQuota - totalSent);
-    const { data: students, error: fetchErr } = await supabase
+    let query = supabase
       .from("registrations")
-      .select("id, email, full_name, enrollment_number, faculty_institute")
-      .eq("email_sent", false)
-      .order("created_at", { ascending: true })
-      .limit(currentLimit);
+      .select("id, email, full_name, enrollment_number, faculty_institute");
+
+    if (targetId) {
+      query = query.eq("id", targetId).limit(1);
+    } else if (targetEmail) {
+      query = query.eq("email", targetEmail).limit(1);
+    } else if (!isForce) {
+      query = query.eq("email_sent", false).order("created_at", { ascending: true }).limit(currentLimit);
+    } else {
+      query = query.order("created_at", { ascending: true }).limit(currentLimit);
+    }
+
+    const { data: students, error: fetchErr } = await query;
 
     if (fetchErr) {
       console.error("❌ Database query error:", fetchErr.message);
@@ -104,7 +115,11 @@ async function main() {
     }
 
     if (!students || students.length === 0) {
-      console.log("\n🎉 Email queue is completely empty. All pending registrations processed!");
+      if (targetId || targetEmail) {
+        console.log(`\n⚠ No registration found matching criteria.`);
+      } else {
+        console.log("\n🎉 Email queue is completely empty. All pending registrations processed!");
+      }
       break;
     }
 
@@ -118,7 +133,7 @@ async function main() {
 
       const rawName = (student.full_name || "Applicant").trim();
       const fullNameEsc = escapeHtml(rawName);
-      const uniqueHash = crypto.randomBytes(4).toString("hex").toUpperCase();
+      const uniqueHash = (student.id ? student.id.replace(/-/g, "").slice(0, 8) : crypto.randomBytes(4).toString("hex")).toUpperCase();
       const studentEmail = (student.email || "").trim();
 
       if (!studentEmail || !studentEmail.includes("@")) {
@@ -177,6 +192,10 @@ async function main() {
       }
 
       await new Promise(r => setTimeout(r, delayMs));
+    }
+
+    if (targetId || targetEmail || isDryRun) {
+      break;
     }
   }
 

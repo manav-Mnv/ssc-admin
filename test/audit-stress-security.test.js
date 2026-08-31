@@ -244,8 +244,20 @@ async function runAudit() {
     const unauthSend = await makeRequest(testServer, "/api/send-emails", { method: "POST" });
     assert(unauthSend.statusCode === 401, "API /api/send-emails rejects unauthenticated POST with 401");
 
+    const reviewerSend = await makeRequest(testServer, "/api/send-emails", {
+      method: "POST",
+      headers: { "x-admin-key": process.env.ADMIN_KEY || "sscpu" }
+    });
+    assert(reviewerSend.statusCode === 403, "API /api/send-emails rejects standard ADMIN_KEY with 403 Forbidden");
+
     const unauthDelete = await makeRequest(testServer, "/api/delete-all", { method: "DELETE" });
     assert(unauthDelete.statusCode === 401, "API /api/delete-all rejects unauthenticated DELETE with 401");
+
+    const reviewerDelete = await makeRequest(testServer, "/api/delete-all", {
+      method: "DELETE",
+      headers: { "x-admin-key": process.env.ADMIN_KEY || "sscpu" }
+    });
+    assert(reviewerDelete.statusCode === 403, "API /api/delete-all rejects standard ADMIN_KEY with 403 Forbidden");
 
     // Test 1.4: Timing attack resistance
     assert(timingSafeAuth("secret_key_123", "secret_key_123") === true, "Timing safe auth accepts exact matching key");
@@ -407,6 +419,16 @@ async function runAudit() {
     // Verify /api/entries?source=backup requires auth
     const unauthBackup = await makeRequest(testServer, "/api/entries?source=backup");
     assert(unauthBackup.statusCode === 401, "API /api/entries?source=backup rejects unauthenticated requests with 401");
+
+    const reviewerBackup = await makeRequest(testServer, "/api/entries?source=backup", {
+      headers: { "x-admin-key": process.env.ADMIN_KEY || "sscpu" }
+    });
+    assert(reviewerBackup.statusCode === 403, "API /api/entries?source=backup rejects standard ADMIN_KEY with 403 Forbidden");
+
+    const superBackup = await makeRequest(testServer, "/api/entries?source=backup", {
+      headers: { "x-admin-key": process.env.SUPER_ADMIN_KEY || "applessc" }
+    });
+    assert(superBackup.statusCode === 200, "API /api/entries?source=backup permits Super Admin key with 200 OK");
 
     // Verify targetTable routing logic
     const reqQueryLive = { table: "registrations" };
