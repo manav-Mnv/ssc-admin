@@ -97,6 +97,8 @@ async function main() {
       .from("registrations")
       .select("id, email, full_name, enrollment_number, faculty_institute");
 
+    const currentLimit = Math.min(batchSize, maxQuota - totalSent);
+
     if (targetId) {
       query = query.eq("id", targetId).limit(1);
     } else if (targetEmail) {
